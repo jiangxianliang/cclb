@@ -9,7 +9,7 @@
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
+ *    notice, this list of conditions an d the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
@@ -24,7 +24,7 @@
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBST ITUTE GOODS
  * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
  * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
@@ -39,7 +39,6 @@ static const char rcsid[] =
 
 #include <assert.h>
 #include <stdlib.h>
-
 #include "config.h"
 #include "agent.h"
 #include "ip.h"
@@ -51,7 +50,7 @@ static const char rcsid[] =
 #include "nix/nixnode.h"
 #endif //HAVE_STL
 
-
+GlobalAgent* global_a_head = NULL;
 
 #ifndef min
 #define min(a, b) (((a) < (b)) ? (a) : (b))
@@ -67,12 +66,43 @@ public:
 
 int Agent::uidcnt_;		/* running unique id */
 
+Stats1* global_stats = NULL;
+
 Agent::Agent(packet_t pkttype) : 
 	size_(0), type_(pkttype), 
 	channel_(0), traceName_(NULL),
 	oldValueList_(NULL), app_(0), et_(0)
 {
+
+	Stats1* temp = new Stats1();
+	//temp->que = this;
+	temp->next = NULL;
+
+	if (global_stats == NULL)
+		global_stats = temp;
+	else {
+		Stats1* temp1 = global_stats;
+		while(temp1->next!=NULL){
+			temp1=temp1->next;
+		}
+		temp1->next=temp;
+	}	
+
+	GlobalAgent* tem = new GlobalAgent;
+	tem->agent = this;
+	tem->next = NULL;
+
+	if (global_a_head == NULL)
+		global_a_head = tem;
+	else {
+		GlobalAgent* temp2 = global_a_head;
+		while(temp2->next!=NULL){
+			temp2=temp2->next;
+		}
+		temp2->next=tem;
+	}
 }
+
 
 void
 Agent::delay_bind_init_all()
@@ -160,7 +190,7 @@ int Agent::command(int argc, const char*const* argv)
 				return (TCL_OK);
 			}
 			addAgentTrace(argv[2]);
-			return (TCL_OK);
+			return (TCL_OK); 
 		} else if (strcmp(argv[1], "connect") == 0) {
 			connect((nsaddr_t)atoi(argv[2]));
 			return (TCL_OK);

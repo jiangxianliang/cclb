@@ -98,7 +98,7 @@ public:
 	void set_table_size(int level, int csize);
 	RoutingModule *next_rtm_;
 	
-protected:
+public:				// protected changed by RAza
 	Node *n_;
 	Classifier *classifier_;
 };

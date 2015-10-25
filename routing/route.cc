@@ -48,6 +48,8 @@ static const char rcsid[] =
 #include "route.h"
 #include "address.h"
 
+RouteLogic* rt_path = NULL;	//cclb
+
 class RouteLogicClass : public TclClass {
 public:
 	RouteLogicClass() : TclClass("RouteLogic") {}
@@ -67,6 +69,7 @@ void RouteLogic::reset_all()
 
 int RouteLogic::command(int argc, const char*const* argv)
 {
+
 	Tcl& tcl = Tcl::instance();
 	if (argc == 2) {
 		if (strcmp(argv[1], "compute") == 0) {
@@ -311,6 +314,8 @@ int RouteLogic::lookup_hier(char* asrc, char* adst, int& result) {
 
 RouteLogic::RouteLogic()
 {
+				// CCLB
+	rt_path = this;
 	size_ = 0;
 	adj_ = 0;
 	route_ = 0;

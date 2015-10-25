@@ -59,6 +59,8 @@ int Application::command(int argc, const char*const* argv)
 
 	if (argc == 2) {
 		if (strcmp(argv[1], "start") == 0) {
+
+
 			// enableRecv_ only if recv() exists in Tcl
 			tcl.evalf("[%s info class] info instprocs", name_);
 			char result[1024];

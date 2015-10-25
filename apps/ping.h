@@ -66,13 +66,25 @@
 #include "packet.h"
 #include "address.h"
 #include "ip.h"
+#include "../common/node.h"
+// Kamran Akmal
+ //HP
+ #define QLEN 0
+ #define UTILIZATION 1
+ #define NUMFLOWS 2
 
 struct hdr_ping {
 	char ret;
 	double send_time;
  	double rcv_time;	// when ping arrived to receiver
  	int seq;		// sequence number
-
+ 	int link_num;
+	double utilization;
+	double q_lim;
+	int no_flows;
+	double q_len;
+	int statDemanded; //HP
+	
 
 	// Header access methods
 	static int offset_; // required by PacketHeaderManager
@@ -85,10 +97,12 @@ struct hdr_ping {
 class PingAgent : public Agent {
 public:
 	PingAgent();
+	void send_c(int, int);
  	int seq;	// a send sequence number like in real ping
 	int oneway; 	// enable seq number and one-way delay printouts
 	virtual int command(int argc, const char*const* argv);
 	virtual void recv(Packet*, Handler*);
+	void updateStats(hdr_ping* abc);
 };
 
 #endif // ns_ping_h

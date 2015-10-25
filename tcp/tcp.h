@@ -34,12 +34,23 @@
  */
 #ifndef ns_tcp_h
 #define ns_tcp_h
-
+//#include "node.h"
 #include "agent.h"
-#include "packet.h"
 
+//#include "packet.h"
 //class EventTrace;
+#include "../routing/route.h"
+struct Flow_path {
+	int node;
+	Flow_path* next;
+};
 
+
+
+
+
+// #include <vector>
+// using namespace std;
 struct hdr_tcp {
 #define NSA 3
 	double ts_;             /* time packet generated (at source) */
@@ -81,8 +92,12 @@ struct hdr_tcp {
 #define	TCP_REASON_DUPACK	0x02
 #define	TCP_REASON_RBP		0x03   // used only in tcp-rbp.cc
 #define TCP_REASON_PARTIALACK   0x04
-
+// RAZA DHT DEFINES xxxxxxxxxxxxxxxxx
+#define DHT12 0
+#define HOST_PER_RACK 2
+//xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 /* these are reasons we adjusted our congestion window */
+
 
 #define	CWND_ACTION_DUPACK	1	// dup acks/fast retransmit
 #define	CWND_ACTION_TIMEOUT	2	// retransmission timeout
@@ -105,6 +120,12 @@ struct hdr_tcp {
 #define TCP_IDLE		0x00000400
 #define NO_OUTSTANDING_DATA     0x00000800
 
+// dctcp
+#define CLOSE_SSTHRESH_DCTCP   0x00001000
+#define CLOSE_CWND_DCTCP       0x00002000
+
+#define POLL_RATE 0.0003	// POLLING RATE  0.0006 for ping.tcl 0.00025 for fat_tree.tcl
+#define BTNK_POLL 10
 /*
  * tcp_tick_:
  * default 0.1,
@@ -170,11 +191,50 @@ struct hstcp {
 	hstcp() : low_p(0.0), dec1(0.0), dec2(0.0), p1(0.0), p2(0.0),
 	    cwnd_last_(0.0), increase_last_(0.0) { }
 };
+// class PollTimer : public TimerHandler {
+//  public:
+//     PollTimer() : TimerHandler()
+//     {
+//        //printf("Razia's timer\n");
+//     }
+//     virtual void expire (Event *e);  
+// };
 
-class TcpAgent : public Agent {
+
+class TcpAgent : public Agent,public TimerHandler {
 	friend class XcpEndsys;
 public:
+	 // custom code
+	int idenfifier;
+	// end custom code	
 	TcpAgent();
+//	PollTimer poll;
+	Flow_path* flow_path;
+	//vector<int> f_path;
+	virtual void send_one_packet(); // CUSTOM sends one packet
+	virtual void print_pathway(); // CUSTOM prints the pathway in the gloabl pathway object	
+	virtual void expire (Event *e);
+	void incrementFlows();
+	void install_path(int point);
+	void increment2(int a);
+	void decrementFlows();
+	void decrement2(int a);	
+	void every_link_poll();    
+	void fetch_stats(int start, int end);	// link between start and end node
+	void update_edge(int start, int end);
+	int poll_off;
+	void poll_round_robin();
+	Flow_path* prev_link;
+	void poll_btnk_per();
+	void poll_dht();
+	void init_DHT(int);
+	void request_stats(int,int,int,int);
+	void poll_per();
+	Flow_path* btnk;
+	int btnk_fix;
+	void poll_per1();
+	int btnk_wait;
+
 	virtual ~TcpAgent() {free(tss);}
         virtual void recv(Packet*, Handler*);
 	virtual void timeout(int tno);
@@ -182,11 +242,13 @@ public:
 	int command(int argc, const char*const* argv);
 	virtual void sendmsg(int nbytes, const char *flags = 0);
 
+
 	void trace(TracedVar* v);
 	virtual void advanceby(int delta);
 
 	virtual void reset();
-
+	double getRate();
+	int flow_count();	//RAZA FRIDAY
 	/* These two functions aid Tmix one-way TCP agents */
 	int is_closed() {return closed_;} 
 	void clr_closed() {closed_ = 0;}
@@ -200,7 +262,7 @@ protected:
 
 	virtual void delay_bind_init_all();
 	virtual int delay_bind_dispatch(const char *varName, const char *localName, TclObject *tracer);
-
+	void install_path();
 	double boot_time_;	/* where between 'ticks' this sytem came up */
 	double overhead_;
 	double wnd_;
@@ -432,6 +494,12 @@ protected:
 
 	/* Used for ECN */
 	int ecn_;		/* Explicit Congestion Notification */
+
+	/* Use for DCTCP */
+	int dctcp_;
+	double dctcp_alpha_;
+	double dctcp_g_;
+
 	int cong_action_;	/* Congestion Action.  True to indicate
 				   that the sender responded to congestion. */
         int ecn_burst_;		/* True when the previous ACK packet

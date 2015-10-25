@@ -137,7 +137,8 @@ static const packet_t PT_RAP_ACK = 41;
 static const packet_t PT_TFRC = 42;
 static const packet_t PT_TFRC_ACK = 43;
 static const packet_t PT_PING = 44;
-        
+static const packet_t PT_RAZA = 73;
+
 static const packet_t PT_PBC = 45;
         // Diffusion packets - Chalermek
 static const packet_t PT_DIFF = 46;
@@ -200,7 +201,7 @@ static const packet_t PT_DCCP_RESET = 71;
 static const packet_t PT_MDART = 72;
 	
         // insert new packet types here
-static packet_t       PT_NTYPE = 73; // This MUST be the LAST one
+static packet_t       PT_NTYPE = 74; // This MUST be the LAST one
 
 enum packetClass
 {
@@ -355,7 +356,7 @@ public:
  		name_[PT_TFRC]= "tcpFriend";
 		name_[PT_TFRC_ACK]= "tcpFriendCtl";
 		name_[PT_PING]="ping";
-	
+		name_[PT_RAZA]="raza";
 		name_[PT_PBC] = "PBC";
 
 	 	/* For diffusion : Chalermek */

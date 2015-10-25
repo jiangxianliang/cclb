@@ -72,6 +72,7 @@ public:
 
 class RouteLogic : public TclObject {
 public:
+
 	RouteLogic();
 	~RouteLogic();
 	int command(int argc, const char*const* argv);
@@ -124,6 +125,9 @@ protected:
 		Cmax_;			/* max value of C_ for initialization purpose */
 	
 };
+
+extern RouteLogic* rt_path;		//cclb
+
 
 class RouteLogicAlgo : public RouteLogic {
 public:

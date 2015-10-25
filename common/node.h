@@ -60,6 +60,8 @@
 #include "location.h"
 #include "rtmodule.h"
 
+#define POLL_RATE 0.0003
+
 class NixNode;
 class LinkHead;
 
@@ -71,12 +73,21 @@ LIST_HEAD(linklist_head, LinkHead); // declare list head structure
  * right now it is a placeholder.  See satlink.h for now.  It is declared in
  * node.h for now since all nodes have a linked list of LinkHeads.
  */
+//#include <iostream>
 
+#include <fstream>
+#include <string>
+#include <vector>
 #include "parentnode.h"
-
+using namespace std;
 class Node;
 class NetworkInterface;
 class RoutingModule;
+
+struct Total_count{
+	int count;
+};
+extern Total_count* t_c;
 class LinkHead : public Connector {
 public:
 	LinkHead(); 
@@ -123,11 +134,79 @@ struct rtm_node {
 	rtm_node* next;
 };
 
-class Node : public ParentNode {
+struct Topo_nodes{
+	int node_num;
+};
+
+struct Topo_stats {
+
+	double utilization;
+	double q_lim;
+	int no_flows;
+	double q_size;
+	void setStats(double util,double qL,int nF,double qS) {
+		utilization = util;
+		q_lim = qL;
+		no_flows = nF;
+		q_size = qS;
+	}
+	void setStats_Num(double util,double qL,int nF){
+		utilization = util;
+		q_lim = qL;
+		no_flows = nF;		
+	}
+	void setStats_Queue(double util,double qL,double qS){
+		utilization = util;
+		q_lim = qL;
+		q_size = qS;		
+	}
+};
+
+struct Topo_links{
+	int n_start;
+	int n_end;
+	int link_num;
+	Topo_stats stats;
+	double last_poll;
+	double capacity;
+	Topo_links(int s,int e,int n,double c){
+		n_start = s;
+		n_end = e;
+		capacity = c;
+		link_num = n;
+		last_poll = -1;
+		stats.setStats(0,0,0,0);
+	}
+};
+
+struct Node_count{
+	int node;
+	int count;
+	//int stat_demand; // 2 = link count; 2 = port stats, 0 = both
+};
+
+struct Fixed_links{
+	int link_num;
+	vector<Node_count> node_count;
+	Fixed_links(int a){
+		link_num = a;
+	}
+};
+
+struct Fixed_mappings{
+	int address;
+	vector<Fixed_links> fixed_links;
+};
+
+class Node : public ParentNode, public TimerHandler {
 public:
 	Node(void);
 	~Node();
-
+	void send_link(int,int);
+	void poll_link(int,int);
+	void send_stats();
+	void fetch_stats();
+	virtual void expire (Event *e);
 	inline int address() { return address_;}
 	inline int nodeid() { return nodeid_;}
 	inline bool exist_namchan() const { return (namChan_ != 0); }
@@ -164,11 +243,16 @@ public:
 	void set_table_size(int nn);
 	void set_table_size(int level, int csize);
 
-protected:
+public:		// protected changed by RAZ
 	LIST_ENTRY(Node) entry;  // declare list entry structure
 	int address_;
 	int nodeid_; 		 // for nam use
-
+	int poll_stat;
+	int addr(){return address_;}
+	vector<Topo_nodes> topo_nodes;
+	void print_stats();
+	vector<Topo_links> topo_links;
+	vector<Fixed_mappings> fixed_mappings;
 	// Nam tracing facility
         Tcl_Channel namChan_;
 	// Single thread ns, so we can use one global storage for all 
@@ -181,7 +265,7 @@ protected:
 
 	// pointer to head of rtmodule chain
 	RoutingModule* rtnotif_;
-
+	int num_flow;	//RAZA FRIDAY
 #ifdef HAVE_STL
 	NixNode* nixnode_;   // used for nix routing (on-demand source routing for simulator performance)
 #endif /* STL */

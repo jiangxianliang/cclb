@@ -39,13 +39,18 @@
 
 #include <stdio.h>
 #include <stdarg.h>
-
+#include <fstream>
 #include "address.h"
 #include "config.h"
 #ifdef HAVE_STL
 #include "nix/nixnode.h"
 #endif //HAVE_STL
 #include "node.h"
+#include <iostream>
+#include <sstream>
+ using namespace std;
+
+Total_count* t_c = NULL;
 
 static class LinkHeadClass : public TclClass {
 public:
@@ -110,6 +115,136 @@ Node::Node() :
 #endif //HAVE_STL
 	energy_model_(NULL), location_(NULL)
 {
+
+	// initilize custom nodes CCLB
+
+	if (t_c == NULL){
+		Total_count* ttt = new Total_count;
+		ttt->count = 0;
+		t_c = ttt;
+	}
+	else
+		t_c->count++;
+
+	num_flow = 0; //friday 
+	string buffer;
+//	printf("COMES1");
+	ifstream fin,fin2;
+
+	//cout << "XXXXXXXXXXXXXX    FOR EACH NODE XXXXXXXXXXXX"<<endl;
+	fin.open("/home/raza/ns-allinone-2.35/ns-2.35/common/out.txt");
+	fin2.open("/home/raza/ns-allinone-2.35/ns-2.35/common/mapping.txt");
+	if (fin.fail()){
+		printf("TOPOLOGY FILE NOT FOUND");
+	}
+	if (fin2.fail()){
+		printf("TOPO NOT FOUND");
+	}
+	string b1;
+	// for (int i=0;i<=t_c->count;i++){
+	// 	getline(fin2,b1);
+	// }
+	int m =0;
+	while(!fin2.eof()){
+		Fixed_mappings fx;	
+		fx.address = m;
+		m++;
+		getline(fin2,b1);
+		istringstream ss(b1);
+		string token;
+		getline(ss, token, ' ');
+		while(std::getline(ss, token, ' ')) {
+   			//cout << token << '\n';
+   			Fixed_links fix_link_temp(atoi(token.c_str()));
+	   		fx.fixed_links.push_back(fix_link_temp);
+		}
+		fixed_mappings.push_back(fx);
+
+	}
+
+	// for (int i =0;i<fixed_mappings.size();i++){
+	// 	cout << "MY ADDRESS IS " <<fixed_mappings[i].address<<endl;
+	// 	for (int j=0;j<fixed_mappings[i].fixed_links.size();j++){
+	// 		cout << "	"<<fixed_mappings[i].fixed_links[j].link_num <<  " ";
+	// 	}
+	// 	cout<<endl;
+	// }
+
+//	printf("COMES2");
+	int temp;
+	int temp1;
+	int temp2;
+	double temp3;
+	int is_node = 1;
+	getline(fin,buffer);
+//		cout<<"buffer is  "<< buffer<<"RAZA"<<endl;
+
+	while (!fin.eof()){
+
+		//if (is_node == 1)
+//		cout<<"buffer is  "<< buffer<<"RAZA"<<endl;
+//		printf("BUFFER LENGTH");
+		//printf("%d\n",buffer.length());
+		if(buffer.length()==0)
+			continue;
+		if(buffer.compare("Links")==0 && is_node == 1){
+//			printf("found\n");
+			is_node = 0;
+			continue;
+		}
+		if(is_node == 1){
+			temp = atoi(buffer.c_str());
+			Topo_nodes n1;
+			n1.node_num = temp;
+			topo_nodes.push_back(n1); 
+			getline(fin,buffer);
+
+		}
+		if(is_node==0){
+			getline(fin,buffer,' ');
+			if(buffer.length()==0)
+				continue;			
+			temp = atoi(buffer.c_str());
+			getline(fin,buffer,' ');
+			temp1 = atoi(buffer.c_str());
+			getline(fin,buffer,' ');
+			temp2 = atoi(buffer.c_str());
+			getline(fin,buffer);
+			temp3 = atof(buffer.c_str());
+			Topo_links l1 = Topo_links(temp,temp1,temp2,temp3);	// CAPACITY in Gigabits per second
+			//cout<<temp<<"   "<<temp1<<"   "<<temp2<<endl;
+			// l1.n_start = temp;
+			// l1.n_end = temp1;
+			// l1.link_num = temp2;
+			topo_links.push_back(l1);
+		}
+	}
+
+
+	poll_stat = 0;
+
+
+
+	// int k_arry = 4; // user defined 
+
+	// int end_nodes = k_arry/2;
+
+	// int my_addr = t_c->count;
+	// cout<<"MY ADDR is " << my_addr << endl;
+	// my_addr = my_addr/end_nodes;
+	// cout << "UPDATED MY_ADDR is "<<my_addr<<endl;
+	// for (int i=0;i<topo_links.size();i++){
+	// 	if ( topo_links[i].link_num%my_addr == 0 )
+	// 	{
+	// 		Fixed_links ff = Fixed_links(i,0);
+	// 		fixed_links.push_back(ff);
+	// 	}
+	// }
+	// cout << "MY LINKS ARE"<<endl;
+	// for (int i=0;i<fixed_links.size();i++){
+	// 	cout <<  fixed_links[i].link_num << endl;
+	// }
+	// cout << "MY LINKS END" << endl;
 	LIST_INIT(&ifhead_);
 	LIST_INIT(&linklisthead_);
 	insert(&(Node::nodehead_)); // insert self into static list of nodes
@@ -129,6 +264,106 @@ Node::Node() :
 #endif //HAVE_STL
 	neighbor_list_ = NULL;
 }
+
+
+void Node::expire (Event *e) {
+
+	fetch_stats();
+	send_stats();
+//	print_stats();
+    //cout<<"RAZA"<<endl;
+    resched(POLL_RATE);
+
+}
+
+void Node::print_stats(){
+
+
+	for (int i =0;i<fixed_mappings.size();i++){
+		//cout << "MY ADDRESS IS " <<fixed_mappings[i].address<<endl;
+		for (int j=0;j<fixed_mappings[i].fixed_links.size();j++){
+			if(fixed_mappings[i].fixed_links[j].link_num == 44 && fixed_mappings[i].fixed_links[j].node_count.size()!=0)
+			cout << "	["<<fixed_mappings[i].fixed_links[j].link_num <<  " , " << fixed_mappings[i].fixed_links[j].node_count[0].count<<"]  ";
+		}
+		//cout<<endl;
+	}
+}
+
+// seperate the
+
+void Node::fetch_stats(){
+    int my_num = addr();
+    //cout<<my_num<<endl;
+    Node *me = Node::get_node_by_address(addr());
+   	for (int j=0;j<fixed_mappings[my_num].fixed_links.size();j++){
+   		for (int k=0;k<fixed_mappings[my_num].fixed_links[j].node_count.size();k++){
+   			//cout<<
+   			
+   			if (fixed_mappings[my_num].fixed_links[j].node_count[k].count > 0){
+            	
+            	//cout<<"RAZZZZZZZZZZ"<<me->fixed_mappings[6].fixed_links[j].node_count[k].count<<endl; 
+
+   				int link_num = fixed_mappings[my_num].fixed_links[j].link_num;
+   				int start = me->topo_links[link_num].n_start;
+   				//cout<<"polling "<<link_num<<endl;
+   				poll_link(link_num,start);
+   				break;
+   			}
+   		}
+   	}
+}
+
+void Node::send_stats(){
+    int my_num = addr();
+    Node *me = Node::get_node_by_address(addr());
+   	for (int j=0;j<fixed_mappings[my_num].fixed_links.size();j++){
+   		for (int k=0;k<fixed_mappings[my_num].fixed_links[j].node_count.size();k++){
+   			if (fixed_mappings[my_num].fixed_links[j].node_count[k].count > 0){
+   				int link_num = fixed_mappings[my_num].fixed_links[j].link_num;
+   				int node = fixed_mappings[my_num].fixed_links[j].node_count[k].node;
+   				send_link(link_num,node);
+   			}
+   		}
+   	}
+}
+
+
+void Node::send_link(int link_num,int node){ // sending the information to all the required nodes
+    Node *me = Node::get_node_by_address(addr());
+
+    int agent_num = me->topo_nodes.size()*me->topo_nodes.size();
+    agent_num = agent_num + (addr()*me->topo_nodes.size());
+    agent_num = agent_num + node;
+    //cout << "POLLING AGENT NO. between "<< start <<"   "<<end << "   " << agent_num<<endl;
+    GlobalAgent* myAgent = global_a_head->next;
+    for (int i=0;i<agent_num;i++){
+        myAgent = myAgent->next;
+    }
+    // poll that agent
+    myAgent->agent->send_c(2,link_num,2);
+}
+
+
+
+
+
+void Node::poll_link(int link_num,int start){
+    Node *me = Node::get_node_by_address(addr());
+
+    int my_num = addr();
+    int agent_num = my_num*(me->topo_nodes.size());
+    agent_num = agent_num + start;
+    //cout << "POLLING AGENT NO. between "<< start <<"   "<<end << "   " << agent_num<<endl;
+    GlobalAgent* myAgent = global_a_head->next;
+    for (int i=0;i<agent_num;i++){
+        myAgent = myAgent->next;
+    }
+    // poll that agent
+    myAgent->agent->send_c(2,link_num);
+}
+
+
+
 
 Node::~Node()
 {
@@ -305,9 +540,12 @@ void Node::namdump()
 NsObject* Node::intf_to_target(int32_t label)
 {
 	LinkHead *lhp = linklisthead_.lh_first;
-	for (; lhp; lhp = lhp->nextlinkhead()) 
+
+	for (; lhp; lhp = lhp->nextlinkhead()){ 
+		printf("1");
 		if (label == lhp->label())
 			return ((NsObject*) lhp);
+	}
 	return NULL;
 }
 

@@ -38,7 +38,7 @@ CPP	= g++
 LINK	= $(CPP)
 LINK_SHLIB = gcc -shared
 MKDEP	= ./conf/mkdep
-TCLSH	= /home/hasnain/ns-allinone-2.35/bin/tclsh8.5
+TCLSH	= /home/raza/ns-allinone-2.35/bin/tclsh8.5
 TCL2C	= ../tclcl-1.20/tcl2c++
 AR	= ar rc $(BLANK)
 
@@ -53,7 +53,7 @@ PERL	= /usr/bin/perl
 # for diffusion
 #DIFF_INCLUDES = "./diffusion3/main ./diffusion3/lib ./diffusion3/nr ./diffusion3/ns"
 
-CCOPT	= -O2 -Wall -Wno-write-strings 
+CCOPT	=  -Wall -Wno-write-strings 
 STATIC	= 
 #LDFLAGS	= $(STATIC)
 LDFLAGS	=  -Wl,-export-dynamic 
@@ -64,7 +64,7 @@ DEFINE	= -DTCP_DELAY_BIND_ALL -DNO_TK -DTCLCL_CLASSINSTVAR  -DNDEBUG -DLINUX_TCP
 INCLUDES = \
 	-I.  \
 	-I. \
-	-I/home/hasnain/ns-allinone-2.35/tclcl-1.20 -I/home/hasnain/ns-allinone-2.35/otcl-1.14 -I/home/hasnain/ns-allinone-2.35/include -I/home/hasnain/ns-allinone-2.35/include -I/home/hasnain/ns-allinone-2.35/include -I/usr/include/pcap \
+	-I/home/raza/ns-allinone-2.35/tclcl-1.20 -I/home/raza/ns-allinone-2.35/otcl-1.14 -I/home/raza/ns-allinone-2.35/include -I/home/raza/ns-allinone-2.35/include -I/home/raza/ns-allinone-2.35/include -I/usr/include/pcap \
 	-I./tcp -I./sctp -I./common -I./link -I./queue \
 	-I./adc -I./apps -I./mac -I./mobile -I./trace \
 	-I./routing -I./tools -I./classifier -I./mcast \
@@ -76,9 +76,9 @@ INCLUDES = \
 
 
 LIB	= \
-	-L/home/hasnain/ns-allinone-2.35/tclcl-1.20 -ltclcl -L/home/hasnain/ns-allinone-2.35/otcl-1.14 -lotcl -L/home/hasnain/ns-allinone-2.35/lib -ltk8.5 -L/home/hasnain/ns-allinone-2.35/lib -ltcl8.5 \
+	-L/home/raza/ns-allinone-2.35/tclcl-1.20 -ltclcl -L/home/raza/ns-allinone-2.35/otcl-1.14 -lotcl -L/home/raza/ns-allinone-2.35/lib -ltk8.5 -L/home/raza/ns-allinone-2.35/lib -ltcl8.5 \
 	-lXext -lX11 \
-	 -lnsl -ldl \
+	 -lnsl -lpcap -ldl \
 	-lm -lm 
 #	-L${exec_prefix}/lib \
 
@@ -291,7 +291,7 @@ OBJ_CC = \
 	diffusion/diffusion.o diffusion/diff_rate.o diffusion/diff_prob.o \
 	diffusion/diff_sink.o diffusion/flooding.o diffusion/omni_mcast.o \
 	diffusion/hash_table.o diffusion/routing_table.o diffusion/iflist.o \
-	tcp/tfrc.o tcp/tfrc-sink.o mobile/energy-model.o apps/ping.o tcp/tcp-rfc793edu.o \
+	tcp/tfrc.o tcp/tfrc-sink.o mobile/energy-model.o apps/ping.o apps/raza.o tcp/tcp-rfc793edu.o \
 	queue/rio.o queue/semantic-rio.o tcp/tcp-sack-rh.o tcp/scoreboard-rh.o \
 	plm/loss-monitor-plm.o plm/cbr-traffic-PP.o \
 	linkstate/hdr-ls.o \
@@ -394,7 +394,7 @@ SUBDIRS=\
 	indep-utils/webtrace-conv/nlanr \
 	indep-utils/webtrace-conv/ucb
 
-BUILD_NSE = 
+BUILD_NSE = nse
 
 all: $(NS) $(BUILD_NSE) $(NSTK) all-recursive Makefile
 

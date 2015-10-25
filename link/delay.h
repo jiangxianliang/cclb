@@ -56,6 +56,7 @@ class LinkDelay : public Connector {
 	}
 	double bandwidth() const { return bandwidth_; }
 	void pktintran(int src, int group);
+	
  protected:
 	int command(int argc, const char*const* argv);
 	void reset();

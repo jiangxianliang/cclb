@@ -101,9 +101,9 @@ ns will fall back on running the first perl in your path.\\\n\
 The wrong version of perl may break the test suites.\\\n\
 Reconfigure and rebuild ns if this is a problem.\\\n\
 \"\n\
-checkout_executable TCLSH \"/home/hasnain/ns-allinone-2.35/bin/tclsh8.5\" tclsh \"\\\n\
+checkout_executable TCLSH \"/home/raza/ns-allinone-2.35/bin/tclsh8.5\" tclsh \"\\\n\
 When configured, ns found the right version of tclsh in\\\n\
-/home/hasnain/ns-allinone-2.35/bin/tclsh8.5\n\
+/home/raza/ns-allinone-2.35/bin/tclsh8.5\n\
 but it doesn't seem to be there anymore, so\\\n\
 ns will fall back on running the first tclsh in your path.\\\n\
 The wrong version of tclsh may break the test suites.\\\n\
@@ -3429,6 +3429,7 @@ DCCP_CLOSE      # DCCP, transport protocol\n\
 DCCP_CLOSEREQ   # DCCP, transport protocol\n\
 Message # a protocol to carry text messages\n\
 Ping 	# Ping\n\
+Raza	# Raza\n\
 PBC     # PBC\n\
 ARP 	# Address Resolution Protocol, network wireless stack\n\
 GAF 	# Geographic Adaptive Delity, for ad-hoc networks\n\
@@ -19484,8 +19485,8 @@ Agent set ttl_ 32 ; # arbitrary choice here\n\
 Agent set debug_ false\n\
 Agent set class_ 0\n\
 \n\
-\n\
 Agent/Ping set packetSize_ 64\n\
+Agent/Raza set packetSize_ 48\n\
 \n\
 Agent/UDP set packetSize_ 1000\n\
 Agent/UDP instproc done {} { }\n\
@@ -19643,6 +19644,11 @@ Agent/TCP set EnblRTTCtr_ 0\n\
 Agent/TCP set control_increase_ 0\n\
 \n\
 Agent/TCP set SetCWRonRetransmit_ true ; # added on 2005/06/19.\n\
+Agent/TCP set dctcp_ false;\n\
+Agent/TCP set dctcp_alpha_ 0.0;\n\
+Agent/TCP set dctcp_g_ 0.0625;\n\
+\n\
+\n\
 \n\
 Agent/TCP set nam_tracevar_ false\n\
 \n\

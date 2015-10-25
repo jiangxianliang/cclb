@@ -444,6 +444,8 @@ void RoutingModule::unreg_route_notify(RoutingModule *rtm) {
 
 void RoutingModule::add_route(char *dst, NsObject *target) 
 {
+	//printf(dst);
+	//printf("\n");
 	if (classifier_) 
 		classifier_->do_install(dst,target); 
 	if (next_rtm_ != NULL)

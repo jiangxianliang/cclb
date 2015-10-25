@@ -826,8 +826,9 @@ Agent set class_ 0
 
 ##Agent set seqno_ 0 now is gone
 ##Agent set class_ 0 now is gone
-
+# CCLB THIS IS THE SIZE OF OUR PING PACKET CHANGE IT ACCORDINGLY 
 Agent/Ping set packetSize_ 64
+Agent/Raza set packetSize_ 48
 
 Agent/UDP set packetSize_ 1000
 Agent/UDP instproc done {} { }
@@ -1026,6 +1027,12 @@ Agent/TCP set control_increase_ 0
 
 Agent/TCP set SetCWRonRetransmit_ true ; # added on 2005/06/19.
 				 	 # default changed on 2008/06/05. 
+# DCTCP
+Agent/TCP set dctcp_ false;
+Agent/TCP set dctcp_alpha_ 0.0;
+Agent/TCP set dctcp_g_ 0.0625;
+
+
 
 # XXX Generate nam trace or plain old text trace for variables. 
 # When it's true, generate nam trace.

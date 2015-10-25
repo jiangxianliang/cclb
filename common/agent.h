@@ -36,12 +36,15 @@
 
 #ifndef ns_agent_h
 #define ns_agent_h
+//#include "node.h"
 
 #include "connector.h"
 #include "packet.h"
 #include "timer-handler.h"
 #include "ns-process.h"
 #include "app.h"
+//#include "../common/node.h"
+//#include "node.h"
 //#include "basetrace.h"
 #define TIME_FORMAT "%.15g"
 // TIME_FORMAT is in basetrace.h, but including that header leads to problems
@@ -55,9 +58,18 @@
  */
 
 #define TRACEVAR_MAXVALUELENGTH 128
-
+//class Node;
 class Application;
 
+struct Stats1 {
+
+	double utilization;
+	double q_lim;
+	int no_flows;
+	double q_size;
+	Stats1* next;
+};
+extern Stats1* global_stats;
 
 // store old value of traced vars
 // work only for TracedVarTcl
@@ -90,6 +102,9 @@ class Agent : public Connector {
 			    nsaddr_t dst);
 	virtual void sendto(int sz, AppData*, const char* flags,
 			    ns_addr_t dst);
+	virtual void send_c(int,int){ printf("Raza send_c() wrong caller 1"); }
+	virtual void send_c(int,int,int){ printf("Raza2 send_c2() wrong caller 2"); }
+
 
 	virtual void sendmsg(int nbytes, const char *flags = 0);
 	virtual void send(int nbytes) { sendmsg(nbytes); }
@@ -107,7 +122,9 @@ class Agent : public Connector {
 	void set_pkttype(packet_t pkttype) { type_ = pkttype; }
 	inline packet_t get_pkttype() { return type_; }
 
- protected:
+	//Stats statistics;
+
+// protected:
 	int command(int argc, const char*const* argv);
 	virtual void delay_bind_init_all();
 	virtual int delay_bind_dispatch(const char *varName, const char *localName, TclObject *tracer);
@@ -155,6 +172,15 @@ class Agent : public Connector {
  private:
 	void flushAVar(TracedVar *v);
 };
+
+struct GlobalAgent{
+	Agent* agent;
+	GlobalAgent* next;
+} ;
+
+extern GlobalAgent* global_a_head;
+
+
 
 #endif
 

@@ -42,23 +42,76 @@
 #include "ip.h"
 class Packet;
 
+#include <stdio.h>
+#include <string.h>
+#include <map>
+// Defines a pathway_link
+struct pathway_link{
+public:
+int link_id; // link identification
+pathway_link* next; // next link
+};
+// Defines a flow
+struct pathway_flow {
+public:
+int32_t src; // src ip
+int32_t src_prt; // src port
+int32_t dst; // dst ip
+int32_t dst_prt; // dstp port
+// Flow links
+pathway_link* links;
+};
+
+struct pathway {
+public:
+// key is 4 tuple (src, dest, src_prt, dst_prt) and value is pathway_flow obj
+std::map<char*, pathway_flow*> flow_map;
+};
+
+
+
+struct Flow1{
+	int32_t src_addr_;
+	int32_t dst_addr_;
+	int32_t src_port_;
+	int32_t dst_port_;
+	Flow1* next;
+	int myType;
+	Flow1(int t) {
+		myType = t;
+	}
+	bool equal(Flow1* f){
+		while(f!=NULL){
+			if(src_addr_==f->src_addr_ && dst_addr_==f->dst_addr_ && src_port_==f->src_port_ && dst_port_==f->dst_port_)
+			{	return true;	}
+			f=f->next;
+		}	
+		return false;
+	}
+	int getType() {
+		return myType;
+	}
+};
+
 class PacketQueue : public TclObject {
 public:
-	PacketQueue() : head_(0), tail_(0), len_(0), bytes_(0) {}
+	PacketQueue(); //: head_(0), tail_(0), len_(0), bytes_(0),total_bytes(0) { flow_pointer = NULL;}
 	virtual int length() const { return (len_); }
 	virtual int byteLength() const { return (bytes_); }
-	virtual Packet* enque(Packet* p) { // Returns previous tail
-		Packet* pt = tail_;
-		if (!tail_) head_= tail_= p;
-		else {
-			tail_->next_= p;
-			tail_= p;
-		}
-		tail_->next_= 0;
-		++len_;
-		bytes_ += hdr_cmn::access(p)->size();
-		return pt;
-	}
+	virtual Packet* enque(Packet* p); 
+	// { // Returns previous tail
+	// 	Packet* pt = tail_;
+	// 	if (!tail_) head_= tail_= p;
+	// 	else {
+	// 		tail_->next_= p;
+	// 		tail_= p;
+	// 	}
+	// 	tail_->next_= 0;
+	// 	++len_;
+	// 	bytes_ += hdr_cmn::access(p)->size();
+	// 	total_bytes += hdr_cmn::access(p)->size();
+	// 	return pt;
+	// }
 	virtual Packet* deque() {
 		if (!head_) return 0;
 		Packet* p = head_;
@@ -88,6 +141,7 @@ public:
 		head_ = p;
 		++len_;
 		bytes_ += hdr_cmn::access(p)->size();
+		
 	}
         void resetIterator() {iter = head_;}
         Packet* getNext() { 
@@ -96,19 +150,45 @@ public:
 		return tmp;
 	}
 
-protected:
+
+	int num_flows();
+//protected:		//Raza twice
 	Packet* head_;
 	Packet* tail_;
 	int len_;		// packet count
 	int bytes_;		// queue size in bytes
-
-
+	Flow1* flow_pointer;
+	int total_bytes;
 // MONARCH EXTNS
 private:
 	Packet *iter;
 };
 
+struct globalPQ {
+PacketQueue* packet_queue_pointer;
+globalPQ* next;
+};
+
 class Queue;
+
+struct globalQ {
+Queue* queue_pointer;
+globalQ* next;
+};
+
+extern globalPQ* pq_head;
+extern globalQ* q_head;
+struct pathway;
+extern pathway* pathway_global;
+
+struct GlobalQueue{
+	Queue* que;
+	GlobalQueue* next;
+};
+
+extern GlobalQueue* global_q_head;
+
+extern Queue* globalQueue1;
 
 class QueueHandler : public Handler {
 public:
@@ -121,19 +201,25 @@ private:
 
 class Queue : public Connector {
 public:
+	int numFlows;
+	void incrementFlows(){ numFlows++;}
+	void decrementFlows(){ numFlows--;}
+	int num_flows();
 	virtual void enque(Packet*) = 0;
 	virtual Packet* deque() = 0;
 	virtual void recv(Packet*, Handler*);
 	virtual void updateStats(int queuesize); 
 	void resume();
-	
+	void printStats();
 	int blocked() const { return (blocked_ == 1); }
 	void unblock() { blocked_ = 0; }
 	void block() { blocked_ = 1; }
 	int limit() { return qlim_; }
 	int length() { return pq_->length(); }	/* number of pkts currently in
 						 * underlying packet queue */
+	int totalBytes() {return pq_->total_bytes;}
 	int byteLength() { return pq_->byteLength(); }	/* number of bytes *
+
 						 * currently in packet queue */
 	/* mean utilization, decaying based on util_weight */
 	virtual double utilization (void);
@@ -142,9 +228,10 @@ public:
 	   Returns the maximum of recent measurements stored in util_buf_*/
 	double peak_utilization(void);
 	virtual ~Queue();
-protected:
+//protected:
 	Queue();
 	void reset();
+
 	int qlim_;		/* maximum allowed pkts in queue */
 	int blocked_;		/* blocked now? */
 	int unblock_on_resume_;	/* unblock q on idle? */
@@ -155,6 +242,7 @@ protected:
 	double true_ave_;	/* true long-term average queue size */
 	double total_time_;	/* total time average queue size compute for */
 
+	
 
 	void utilUpdate(double int_begin, double int_end, int link_state);
 	double last_change_;  /* time at which state changed/utilization measured */

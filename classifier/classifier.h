@@ -75,7 +75,7 @@ public:
 	virtual void set_table_size(int level, int nn);
 
 	int allocPort (NsObject *);	
-protected:
+//protected:
 	virtual int getnxt(NsObject *);
 	virtual int command(int argc, const char*const* argv);
 	void alloc(int);

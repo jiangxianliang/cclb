@@ -59,6 +59,12 @@ FtpClientAgent::FtpClientAgent() : BayTcpAppAgent(PT_NTYPE), running_(0), newfil
 
 void FtpClientAgent::start()
 {
+	printf("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB");
+	printf("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB");
+	printf("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB");
+	printf("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB");
+	printf("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB");
+
 	running_ = 1;
 	newfile_timer_.resched(0.);
 }
@@ -111,6 +117,13 @@ int FtpClientAgent::command(int argc, const char*const* argv)
 	Tcl& tcl = Tcl::instance();
 	if (argc == 2) {
 		if (strcmp(argv[1], "start") == 0) {
+	printf("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+	printf("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+	printf("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+	printf("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+	printf("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+	printf("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+	
 			start();
 			return(TCL_OK);
 		} else if (strcmp(argv[1], "stop") == 0) {

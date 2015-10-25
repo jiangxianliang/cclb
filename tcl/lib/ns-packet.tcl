@@ -162,6 +162,7 @@ set protolist {
 # Application-Layer Protocols:
 	Message # a protocol to carry text messages
 	Ping 	# Ping
+	Raza	# Raza
     PBC     # PBC
 # Wireless:
 	ARP 	# Address Resolution Protocol, network wireless stack

@@ -57,6 +57,7 @@ LinkDelay::LinkDelay()
 	bind_bw("bandwidth_", &bandwidth_);
 	bind_time("delay_", &delay_);
 	bind_bool("avoidReordering_", &avoidReordering_);
+	//check = 10;
 }
 
 int LinkDelay::command(int argc, const char*const* argv)
@@ -84,6 +85,7 @@ int LinkDelay::command(int argc, const char*const* argv)
 
 void LinkDelay::recv(Packet* p, Handler* h)
 {
+	//printf("RAZAAA");		
 	double txt = txtime(p);
 	Scheduler& s = Scheduler::instance();
 	if (dynamic_) {
@@ -111,6 +113,7 @@ void LinkDelay::recv(Packet* p, Handler* h)
 
 void LinkDelay::send(Packet* p, Handler*)
 {
+	printf("RAZA IS HERE");
 	target_->recv(p, (Handler*) NULL);
 }
 
