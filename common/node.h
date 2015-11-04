@@ -60,7 +60,7 @@
 #include "location.h"
 #include "rtmodule.h"
 
-#define POLL_RATE 0.0003
+#define POLL_RATE 0.0003 // only useful in case of information sharing. 
 
 class NixNode;
 class LinkHead;
@@ -84,6 +84,7 @@ class Node;
 class NetworkInterface;
 class RoutingModule;
 
+// not being used. 
 struct Total_count{
 	int count;
 };
@@ -134,9 +135,11 @@ struct rtm_node {
 	rtm_node* next;
 };
 
+//eSDN
 struct Topo_nodes{
 	int node_num;
 };
+// eSDN
 
 struct Topo_stats {
 
@@ -161,14 +164,15 @@ struct Topo_stats {
 		q_size = qS;		
 	}
 };
-
+//eSDN. every node has every link in the toplogy in a vector. 
 struct Topo_links{
 	int n_start;
 	int n_end;
 	int link_num;
 	Topo_stats stats;
-	double last_poll;
-	double capacity;
+	double last_poll; // would tell the expiry date for stats. 
+	double capacity; // static. read from text file. 
+	// called on intilization of each link. from node.cc file. which reads info from file. 
 	Topo_links(int s,int e,int n,double c){
 		n_start = s;
 		n_end = e;
@@ -179,8 +183,10 @@ struct Topo_links{
 	}
 };
 
-struct Node_count{
-	int node;
+// eSDN
+// at count 0, the responsible guy for a given link stops sending me data. 
+struct Node_count { // each of this object identified by 2-tupele. 
+	int node; // ID. 
 	int count;
 	//int stat_demand; // 2 = link count; 2 = port stats, 0 = both
 };
@@ -193,7 +199,9 @@ struct Fixed_links{
 	}
 };
 
-struct Fixed_mappings{
+// working in node.cc
+// each node has a list of these mappings. used to find the host responsible for a link. 
+struct Fixed_mappings {
 	int address;
 	vector<Fixed_links> fixed_links;
 };
@@ -249,10 +257,10 @@ public:		// protected changed by RAZ
 	int nodeid_; 		 // for nam use
 	int poll_stat;
 	int addr(){return address_;}
-	vector<Topo_nodes> topo_nodes;
+	vector<Topo_nodes> topo_nodes; // eSDN. 
 	void print_stats();
-	vector<Topo_links> topo_links;
-	vector<Fixed_mappings> fixed_mappings;
+	vector<Topo_links> topo_links; // eSDN
+	vector<Fixed_mappings> fixed_mappings; // eSDN
 	// Nam tracing facility
         Tcl_Channel namChan_;
 	// Single thread ns, so we can use one global storage for all 

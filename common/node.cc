@@ -118,6 +118,7 @@ Node::Node() :
 
 	// initilize custom nodes CCLB
 
+	// not being used. 
 	if (t_c == NULL){
 		Total_count* ttt = new Total_count;
 		ttt->count = 0;
@@ -132,8 +133,8 @@ Node::Node() :
 	ifstream fin,fin2;
 
 	//cout << "XXXXXXXXXXXXXX    FOR EACH NODE XXXXXXXXXXXX"<<endl;
-	fin.open("/home/raza/ns-allinone-2.35/ns-2.35/common/out.txt");
-	fin2.open("/home/raza/ns-allinone-2.35/ns-2.35/common/mapping.txt");
+	fin.open("/home/hasnain/ns-allinone-2.35/ns-2.35/common/out.txt");
+	fin2.open("/home/hasnain/ns-allinone-2.35/ns-2.35/common/mapping.txt");
 	if (fin.fail()){
 		printf("TOPOLOGY FILE NOT FOUND");
 	}
@@ -145,7 +146,7 @@ Node::Node() :
 	// 	getline(fin2,b1);
 	// }
 	int m =0;
-	while(!fin2.eof()){
+	while(!fin2.eof()) {
 		Fixed_mappings fx;	
 		fx.address = m;
 		m++;
@@ -221,7 +222,7 @@ Node::Node() :
 	}
 
 
-	poll_stat = 0;
+	poll_stat = 0; // eSDN
 
 
 
@@ -291,7 +292,9 @@ void Node::print_stats(){
 
 // seperate the
 
-void Node::fetch_stats(){
+
+//eSDN fetched from the link. 
+void Node::fetch_stats() {
     int my_num = addr();
     //cout<<my_num<<endl;
     Node *me = Node::get_node_by_address(addr());
@@ -306,7 +309,7 @@ void Node::fetch_stats(){
    				int link_num = fixed_mappings[my_num].fixed_links[j].link_num;
    				int start = me->topo_links[link_num].n_start;
    				//cout<<"polling "<<link_num<<endl;
-   				poll_link(link_num,start);
+   				poll_link(link_num,start); // calls the ping agent to update stats for this topo_link object. 
    				break;
    			}
    		}
@@ -340,13 +343,14 @@ void Node::send_link(int link_num,int node){ // sending the information to all t
         myAgent = myAgent->next;
     }
     // poll that agent
-    myAgent->agent->send_c(2,link_num,2);
+    myAgent->agent->send_c(2,link_num,2); // send c of Raza.cc sends the info back to the asker. 
 }
 
 
 
 
 
+//called in fetch stats. 
 void Node::poll_link(int link_num,int start){
     Node *me = Node::get_node_by_address(addr());
 
@@ -359,7 +363,7 @@ void Node::poll_link(int link_num,int start){
         myAgent = myAgent->next;
     }
     // poll that agent
-    myAgent->agent->send_c(2,link_num);
+    myAgent->agent->send_c(2,link_num); // send_c of ping. 
 }
 
 

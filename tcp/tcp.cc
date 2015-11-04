@@ -126,7 +126,9 @@ void TcpAgent::install_path(int point){
     pp->next = ff;
 }
 
-
+/*
+eSDN. above function not being used. 
+*/
 void TcpAgent::install_path(){
     Flow_path* fp = new Flow_path;
     fp->node = here_.addr_;
@@ -1521,7 +1523,8 @@ void TcpAgent::fetch_stats(int start, int end){
     //myAgent->agent->send_c(0,link_num);
 }
 
-
+// hasnain asks his raza.cc please ask Ayyub's raza.cc to send me info on Link X. 
+// hasnain sending flow to farrukh through link X. Ayyub is responsible for link X. 
 void TcpAgent::request_stats(int link, int start, int node, int status){
     Node *me = Node::get_node_by_address(addr());
 
@@ -1534,14 +1537,15 @@ void TcpAgent::request_stats(int link, int start, int node, int status){
         myAgent = myAgent->next;
     }   
    
-    myAgent->agent->send_c(2,link,status);
+    myAgent->agent->send_c(2,link,status); // raza.cc's send_c. 2 NUM_FLOWS_STATS. 1 means start. 0 means stop. 
 }
 
 
 
-
+// eSDN
+// each flow calls it exactly twice. 
 void TcpAgent::init_DHT( int status){   // status = 1 mean start, 0 mean end
-    int hosts = HOST_PER_RACK;
+    int hosts = HOST_PER_RACK; // change in tcp.h when k changes in fattree generator. 
     int start_node = -1;
     int end_node = -1; 
 
@@ -1566,7 +1570,7 @@ void TcpAgent::init_DHT( int status){   // status = 1 mean start, 0 mean end
             }
         }
 
-        for (int i=0;i<me->fixed_mappings.size();i++){
+        for (int i=0;i<me->fixed_mappings.size();i++) {
             if (me->fixed_mappings[i].address>=start_node && me->fixed_mappings[i].address<=end_node){
                 for (int j=0;j<me->fixed_mappings[i].fixed_links.size();j++){
                     if(me->fixed_mappings[i].fixed_links[j].link_num == link_num){
@@ -1576,7 +1580,7 @@ void TcpAgent::init_DHT( int status){   // status = 1 mean start, 0 mean end
                             cout<<"I HAVE LINK "<<link_num<<endl;
                             for (int k=0;k<me->fixed_mappings[i].fixed_links[j].node_count.size();k++){
                                 if(me->fixed_mappings[i].fixed_links[j].node_count[k].node==addr()){
-                                    if (status == 1){
+                                    if (status == 1) {
                                         me->fixed_mappings[i].fixed_links[j].node_count[k].count++;
                                         break;
                                     }
@@ -1737,12 +1741,14 @@ void TcpAgent::poll_round_robin() {
     cwnd_ = 0;
 }
 
-
-void TcpAgent::poll_dht(){
+/*
+    eSDN
+*/
+void TcpAgent::poll_dht() { 
     cout<<"POLL DHT"<<endl;
 
     Flow_path* fp = flow_path;
-    fetch_stats(flow_path->node,flow_path->next->node);
+    fetch_stats(flow_path->node,flow_path->next->node); // its own link. edge link. dont need to poll for that.
 
     // RATE
     double rate;

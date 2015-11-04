@@ -266,11 +266,16 @@ int PingAgent::command(int argc, const char*const* argv)
   return (Agent::command(argc, argv));
 }
 
+
+  /*
+  eSDN. invoked in Raza.cc and tcp.cc
+  HP
+  */
   void PingAgent::send_c(int sd,int lN){
 
-    Packet* pkt = allocpkt();
-    hdr_ping* hdr = hdr_ping::access(pkt);
-      hdr->ret = 3;
+      Packet* pkt = allocpkt();
+      hdr_ping* hdr = hdr_ping::access(pkt);
+      hdr->ret = 3; // set intentionally so that receiver knows i have to respond. receiver sets it 4 so i know this is my response. 
       hdr->seq = seq++;
       hdr->link_num = lN;
       hdr->utilization = -1;
@@ -278,9 +283,13 @@ int PingAgent::command(int argc, const char*const* argv)
       hdr->no_flows = -1;
       hdr->q_len = -1;
       hdr->statDemanded = sd;
-    hdr->send_time = Scheduler::instance().clock();
-    send(pkt, 0);
+      hdr->send_time = Scheduler::instance().clock();
+      send(pkt, 0);
   }
+
+/*
+eSDN. called by receiver. 
+*/
 
 void PingAgent::updateStats(hdr_ping* hdr){
  // cout << "MY NUMBER IS " << addr() <<endl;
@@ -315,6 +324,8 @@ void PingAgent::updateStats(hdr_ping* hdr){
   }
 
 }
+
+
 
 void PingAgent::recv(Packet* pkt, Handler*)
 {
@@ -353,6 +364,8 @@ void PingAgent::recv(Packet* pkt, Handler*)
     return;
   }
   // Is the 'ret' field = 0 (i.e. the receiving node is being pinged)?
+
+  //eSDN
   if (hdr->ret == 3) { 
     // Send an 'echo'. First save the old packet's send_time
 
@@ -382,15 +395,15 @@ void PingAgent::recv(Packet* pkt, Handler*)
     hdrret->send_time = stime;
     // Added by Andrei Gurtov for one-way delay measurement.
     hdrret->rcv_time = Scheduler::instance().clock();
-    hdrret->seq = rcv_seq;
+    hdrret->seq = rcv_seq; // 
     // Send the packet
-    send(pktret, 0);
-  } else if(hdr->ret == 4) {
+    send(pktret, 0); // sent back. 
+  } else if(hdr->ret == 4) { //response of the poll query. 
 
   	Node* me = Node::get_node_by_address(addr());
     if (hdr->statDemanded == NUMFLOWS)
-  	 me->topo_links[hdr->link_num].stats.setStats_Num(hdr->utilization,hdr->q_lim,hdr->no_flows);
-  	else if (hdr->statDemanded == QLEN)
+  	 me->topo_links[hdr->link_num].stats.setStats_Num(hdr->utilization,hdr->q_lim,hdr->no_flows); // topolinks has link objects. 
+  	else if (hdr->statDemanded == QLEN) // not correct atm. 
      me->topo_links[hdr->link_num].stats.setStats_Queue(hdr->utilization,hdr->q_lim,hdr->q_len);
 
 
