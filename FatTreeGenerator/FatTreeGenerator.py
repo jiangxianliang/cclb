@@ -269,7 +269,6 @@ def slice_list(input, size):
 
 # funciton for greating mapping
 
-
 def generateMapping():
     res = open("mapping.txt", 'w')   # opening file
 
@@ -304,6 +303,7 @@ def generateMapping():
             listoflinks.append("")
 
         # giving nodes their own links and putting their ids into list "ids"
+        # because dont need to map them. can monitor themselvees. 
         for temp in temps:
             for j in range(0, number_of_hosts_under_edge_switch):
                 if ("n" + str(i + j)) == temp['start'] or ("n" + str(i + j)) == temp['end']:
@@ -314,12 +314,17 @@ def generateMapping():
         for _id in ids:
             del(temps[int(_id)])
 
+
+
+
         # shuffling the rest of the links
         random.shuffle(temps)
 
+    for i in range(0, num_of_endhosts, number_of_endHosts_per_pod):
+   
         # divinding the list of "links" into k/2 hosts
         parts = list()
-        parts = slice_list(temps, number_of_hosts_under_edge_switch)
+        parts = slice_list(temps, number_of_endHosts_per_pod)
 
         # writing the contents of parts of temps (temporary list of links) to listoflinks (another temporary list)
         for k in range(0, len(parts)):
@@ -338,6 +343,9 @@ def generateMapping():
     # closing and returning
     res.close()
     return
+
+
+
 
 
 # main function of python script

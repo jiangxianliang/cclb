@@ -1545,7 +1545,7 @@ void TcpAgent::request_stats(int link, int start, int node, int status){
 // eSDN
 // each flow calls it exactly twice. 
 void TcpAgent::init_DHT( int status){   // status = 1 mean start, 0 mean end
-    int hosts = HOST_PER_RACK; // change in tcp.h when k changes in fattree generator. 
+    int hosts = HOST_PER_POD; // change in tcp.h when k changes in fattree generator. 
     int start_node = -1;
     int end_node = -1; 
 
