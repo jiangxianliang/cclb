@@ -92,9 +92,10 @@ struct hdr_tcp {
 #define	TCP_REASON_DUPACK	0x02
 #define	TCP_REASON_RBP		0x03   // used only in tcp-rbp.cc
 #define TCP_REASON_PARTIALACK   0x04
-// RAZA DHT DEFINES xxxxxxxxxxxxxxxxx
+// eSDN DHT DEFINES xxxxxxxxxxxxxxxxx
 #define DHT12 0
 #define HOST_PER_RACK 2
+#define HOST_PER_POD 4 // do it in terms of k. 
 //xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 /* these are reasons we adjusted our congestion window */
 

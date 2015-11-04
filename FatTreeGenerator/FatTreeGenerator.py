@@ -17,7 +17,7 @@ aggregator_switch_to_core_switch_bandwidth = 0.1
 endHost_to_edge_switch_delay = 0.025
 edge_switch_to_aggregator_switch_delay = 0.025
 aggregator_switch_to_core_switch_delay = 0.025
-
+#---------------------------------------------------------
 # compute the FAT tree properties
 order_of_FAT_tree = k
 number_of_pods = k
@@ -268,6 +268,8 @@ def slice_list(input, size):
 
 
 # funciton for greating mapping
+
+
 def generateMapping():
     res = open("mapping.txt", 'w')   # opening file
 
