@@ -48,6 +48,8 @@ endHostToEdgeSwitchLinks = []
 edgeSwitchToAggregatorLinks = []
 aggregatorSwitchToCoreSwitchLinks = []
 
+
+
 # ## define methods ###
 
 
@@ -228,8 +230,7 @@ def convertToTCLFormat(nodeIndex):
     $ns at $STATS_START  \"$qmon_ab($i) reset\"\n\t$ns at $STATS_START  \"$bing_ab($i) reset\"\n\t$ns at $STATS_START  \"$ping_ab($i) reset\"\n\tset buf_bytes [expr 0.00025 * 1000 / 1 ]\n\
     $ns at [expr $STATS_START+$STATS_INTR] \"linkDump [$ns link $n($links1($i)) $n($links2($i))] $bing_ab($i) $ping_ab($i) $qmon_ab($i) $STATS_INTR A-B $fq_mon($i) $f_util($i) $buf_bytes\"\n}\n")
 
-    # writing Ping agent to the .tcl file
-    res.write("\n\nset num_nodes " + str(nodeIndex) + ";\nset num_agents 0\nfor { set i 0 } { $i < $num_nodes } { incr i } {\n\tfor {set j 0} {$j < $num_nodes} {incr j} {\n\t\tset p($num_agents) [new Agent/Ping]\n\t\t$ns attach-agent $n($i) $p($num_agents)\n\t\tincr num_agents\n\t}\n}\n")
+    # writing Ping agent to the .tcl file res.write("\n\nset num_nodes " + str(nodeIndex) + ";\nset num_agents 0\nfor { set i 0 } { $i < $num_nodes } { incr i } {\n\tfor {set j 0} {$j < $num_nodes} {incr j} {\n\t\tset p($num_agents) [new Agent/Ping]\n\t\t$ns attach-agent $n($i) $p($num_agents)\n\t\tincr num_agents\n\t}\n}\n")
     res.write("\n\nset ite 0\nset jStart 0\nfor { set i 0 } { $i < " + str(nodeIndex) + " } { incr i } {\n\tfor { set j $jStart } { $j < " + str(nodeIndex + 1) + " } { incr j } {\n\t\tif { $j == " + str(nodeIndex) + " } {\n\t\t\tset ite [expr $ite + $i + 1]\n\t\t\tcontinue\n\t\t}\n\n\t\t$ns connect $p($ite) $p([expr " + str(nodeIndex) + "*$j + $i])\n\t\tincr ite\n\t}\n\tincr jStart\n}\n\n")
 
     # writing Raza agent to the .tcl file
@@ -269,8 +270,9 @@ def slice_list(input, size):
 
 # funciton for greating mapping
 
-def generateMapping():
-    res = open("mapping.txt", 'w')   # opening file
+def generateMapping(nodeIndex):
+    # opening file
+    res = open("mapping.txt", 'w')
 
     links1 = endHostToEdgeSwitchLinks + edgeSwitchToAggregatorLinks + aggregatorSwitchToCoreSwitchLinks
     links2 = getReverseLinks(links1)
@@ -281,67 +283,108 @@ def generateMapping():
         links.append(links1[i])
         links.append(links2[i])
 
-    # assigning ids to links
+    # numbering is done layer by layer
     id = 0
     for link in links:
         link['id'] = str(id)
         id += 1
 
+    print "max id assigned:", id
+    # free memory
+    del(links1)
+    del(links2)
+
     ids = []                       # list that keeps track of links that belong to nodes under consideration
     listoflinks = []               # list to store links of nodes
 
     linkIndex = 0                  # variable for indexing of links
-    for i in range(0, num_of_endhosts, number_of_hosts_under_edge_switch):
-        # fetching original list
-        temps = list(links)
+    nodeDivision = []
 
-        # clearing temporary list
-        listoflinks = list()
-        ids = list()
+    for i in range(0, number_of_endHosts):
+        nodeDivision.append({"node:": i})
 
-        for k in range(0, number_of_hosts_under_edge_switch):
-            listoflinks.append("")
+    # Giving nodes their own links and putting their ids into list "ids"
+    # because dont need to map them. can monitor themselvees.
+    allLinks = links
+    for temp in links:
+        for j in range(0, nodeIndex):
+            if (("n" + str(j)) == temp['start']) or (("n" + str(j)) == temp['end']):
+                # find node
+                for item in nodeDivision:
+                    if item['node:'] == j:
+                        if (item.has_key('links')):
+                            if type(item['links']) == dict:
+                                tmp = []
+                                tmp.append(item['links'])
+                                tmp.append(temp)
+                                item['links'] = tmp
+                            else:
+                                tmp = item['links']
+                                tmp.append(temp)
+                                item['links'] = tmp
+                        else:
+                            item['links'] = temp
 
-        # giving nodes their own links and putting their ids into list "ids"
-        # because dont need to map them. can monitor themselvees. 
-        for temp in temps:
-            for j in range(0, number_of_hosts_under_edge_switch):
-                if ("n" + str(i + j)) == temp['start'] or ("n" + str(i + j)) == temp['end']:
-                    ids.append(temp['id'])
-                    listoflinks[j] += (temp['id'] + " ")
+    # remove mapped links
+    for node in nodeDivision:
+        for link in node['links']:
+            allLinks.remove(link)
 
-        # deleting links from temporary list of links
-        for _id in ids:
-            del(temps[int(_id)])
+    print "link count ::", len(allLinks)
+    print "num end hosts:", num_of_endhosts
 
+    links = list(allLinks)
 
-
-
-        # shuffling the rest of the links
-        random.shuffle(temps)
+    # shuffling the rest of the links
+    random.shuffle(links)
 
     for i in range(0, num_of_endhosts, number_of_endHosts_per_pod):
-   
-        # divinding the list of "links" into k/2 hosts
-        parts = list()
-        parts = slice_list(temps, number_of_endHosts_per_pod)
+        # make tmp structure
+        allLinks = list(links)
+        linkDivision = slice_list(allLinks, number_of_endHosts_per_pod)
 
-        # writing the contents of parts of temps (temporary list of links) to listoflinks (another temporary list)
-        for k in range(0, len(parts)):
-            part = parts[k]
-            for link_in_part in part:
-                listoflinks[k] += (link_in_part['id'] + " ")
+        pprint.pprint(linkDivision)
 
-        # writing data to the file
-        for singlelist in listoflinks:
-            res.write(str(linkIndex))
-            res.write(": ")
-            res.write(singlelist)
-            res.write("\n")
-            linkIndex += 1           # incrementing link index
+        # pprint.pprint(linkDivision)
+        for it in range(i, i + number_of_endHosts_per_pod):
+            for node in nodeDivision:
+                if node['node:'] == it:
+                    node['links'].extend(linkDivision[it % number_of_endHosts_per_pod])
+
+
+    # write to file
+    for node in nodeDivision:
+        res.write(str(node['node:']))
+        res.write(': ')
+        for link in node['links']:
+            res.write(link['id'])
+            res.write(' ')
+        res.write('\n')
+
+    #for i in range(0, num_of_endhosts, number_of_endHosts_per_pod):
+        ## divinding the list of "links" into k/2 hosts
+        #parts = list()
+        #parts = slice_list(temps, number_of_endHosts_per_pod)
+
+        ## writing the contents of parts of temps (temporary list of links) to listoflinks (another temporary list)
+        #for k in range(0, len(parts)):
+        #    part = parts[k]
+        #    for link_in_part in part:
+        #        listoflinks[k] += (link_in_part['id'] + " ")
+
+        ## writing data to the file
+        #for singlelist in listoflinks:
+        #    res.write(str(linkIndex))
+        #    res.write(": ")
+        #    res.write(singlelist)
+        #    res.write("\n")
+        #    linkIndex += 1           # incrementing link index
 
     # closing and returning
-    res.close()
+    #res.close()
+    #pprint.pprint(nodeDivision)
+    for node in nodeDivision:
+        print node['node:'], len(node['links'])
     return
 
 
@@ -357,36 +400,42 @@ def main():
     # generate the nodes
     nodeIndex = generateEndHosts(nodeIndex)
     print "Endhost generation complete"
-    pprint.pprint(endHosts)
-    print "number_of_endHosts::", len(endHosts)
+    # pprint.pprint(endHosts)
+    # print "number_of_endHosts::", len(endHosts)
 
     nodeIndex = generateEdgeSwitches(nodeIndex)
     print "edgeSwitchs generation complete"
-    pprint.pprint(edgeSwitchs)
-    print "number_of_edge_switches::", len(edgeSwitchs)
+    # pprint.pprint(edgeSwitchs)
+    # print "number_of_edge_switches::", len(edgeSwitchs)
 
     nodeIndex = generateAggregatorSwitches(nodeIndex)
     print "aggregatorSwitchs generation complete"
-    pprint.pprint(aggregatorSwitchs)
-    print "number_of_aggregator_switches::", len(aggregatorSwitchs)
+    #pprint.pprint(aggregatorSwitchs)
+    #print "number_of_aggregator_switches::", len(aggregatorSwitchs)
 
     nodeIndex = generateCoreSwitchs(nodeIndex)
     print "coreSwitches generation complete"
-    pprint.pprint(coreSwitches)
-    print "number_of_core_switches::", len(coreSwitches)
+    #pprint.pprint(coreSwitches)
+    #print "number_of_core_switches::", len(coreSwitches)
 
     # generate the links
     generateEndHostToEdgesSwitchLinks()
-    print "EndNode To Edges Switch Links generated"
-    pprint.pprint(endHostToEdgeSwitchLinks)
+    #print "EndNode To Edges Switch Links generated"
+    #pprint.pprint(endHostToEdgeSwitchLinks)
 
     generateEdgesSwitchToAggregatorLinks()
-    print "Edge Switch To Aggregator Switch Links generated"
-    pprint.pprint(edgeSwitchToAggregatorLinks)
+    #print "Edge Switch To Aggregator Switch Links generated"
+    #pprint.pprint(edgeSwitchToAggregatorLinks)
 
     generateAggregatorSwitchToCoreSwitchLinks()
-    print "Aggregator Switch To Core Switch Links generated"
-    pprint.pprint(aggregatorSwitchToCoreSwitchLinks)
+    #print "Aggregator Switch To Core Switch Links generated"
+    #pprint.pprint(aggregatorSwitchToCoreSwitchLinks)
+
+    pprint.pprint("Total nodes generated:: ")
+    pprint.pprint(nodeIndex)
+
+    pprint.pprint("Total links::")
+    pprint.pprint(len(endHostToEdgeSwitchLinks + edgeSwitchToAggregatorLinks + aggregatorSwitchToCoreSwitchLinks))
 
     print "Writing TXT file"
     convertToTXTFormat(nodeIndex)
@@ -397,7 +446,7 @@ def main():
     print 'task complete.'
 
     print "Generating Mapping"
-    generateMapping()
+    generateMapping(nodeIndex)
     print 'task complete.'
     return
 

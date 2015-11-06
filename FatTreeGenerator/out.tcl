@@ -97,17 +97,6 @@ for { set i 0 } { $i < [expr $lnk_size] } { incr i } {
 }
 
 
-set num_nodes 36;
-set num_agents 0
-for { set i 0 } { $i < $num_nodes } { incr i } {
-	for {set j 0} {$j < $num_nodes} {incr j} {
-		set p($num_agents) [new Agent/Ping]
-		$ns attach-agent $n($i) $p($num_agents)
-		incr num_agents
-	}
-}
-
-
 set ite 0
 set jStart 0
 for { set i 0 } { $i < 36 } { incr i } {
