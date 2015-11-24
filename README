@@ -1,44 +1,17 @@
-@(#) $Header: /cvsroot/nsnam/ns-2/README,v 1.5 2000/11/02 22:46:37 johnh Exp $
+This respository contains the ns-2.35 code for endhost data center controllers. It is built by extending ns-2.35 by adding support for endhost controllers. 
 
-ns has been maintained by the
+Each endhost at the data center runs an openflow style controller that reads network statistics from the switches by polling them at short (RTT) time scales. 
 
-MASH Research Group (University of California, Berkeley,
-<http://www-mash.cs.berkeley.edu/ns/>)
+For overhead reduction, there are schemes for statistics sharing. Currently, there are per-rack sharing, per-pod sharing and per-pod bottom up sharing. 
 
-the VINT project (a collaboration among USC/ISI, Xerox PARC, LBNL,
-and UCB, <http://www.isi.edu/nsnam/vint>)
+Master branch has the code for per-rack sharing and there is a seperate branch for each of the other sharing schemes. 
 
-and the CONSER project <http://www.isi.edu/conser/>.
+To run this code, clone this repository into your /ns-allinone-2.35/ns-2.35 directory and replace all the files in their by the files in this repository. 
 
+Then use FatGraphGenerator.py to generate a FatTree with k value of your choice. This will produce files out.txt,  mapping.txt and out.tcl. place out.txt, and
 
-This directory contains a source code or binary distribution of
-the ns-2 Network Simulator.
+mapping.txt in the /ns-allinone-2.35/ns-2.35/common/ directory. These files contain topology information and mappings for info sharing DHT and are read
 
-Ns should configure and build on Unix systems with GNU autoconfigure.
-It should also build on MS-Windows systems; see INSTALL.WIN32 for details.
+from node.cc file. 
 
-Additional information:
-
-QUICK START:  try
-	./configure; make; ./validate
-
-DOWNLOADING AND BUILDING NS:
-	<http://www.isi.edu/nsnam/ns/ns-build.html>
-
-INSTALLATION PROBLEMS AND BUG FIXES:
-	<http://www.isi.edu/nsnam/ns/ns-problems.html>
-
-DOCUMENTATION:
-	ns maual: <http://www.isi.edu/nsnam/ns/doc> 
-
-	<http://www.isi.edu/nsnam/ns>
-	(includes notes about the limitations of model, debugging tips,
-	and a >50 page design overview/tutorial)
-
-LATEST INFORMATION:
-	<http://www.isi.edu/nsnam/ns>
-
-
-If you find ns useful, you may also wish to look at nam, the network
-animator <http://www.isi.edu/nsnam/nam>.
-
+run out.tcl from ns to get the experiment going. 
