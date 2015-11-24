@@ -6,12 +6,11 @@ For overhead reduction, there are schemes for statistics sharing. Currently, the
 
 Master branch has the code for per-rack sharing and there is a seperate branch for each of the other sharing schemes. 
 
-To run this code, clone this repository into your /ns-allinone-2.35/ns-2.35 directory and replace all the files in their by the files in this repository. 
+To run this code, clone this repository into your /ns-allinone-2.35/ns-2.35/ directory and replace all the files in there by the files in this repository. 
 
-Then use FatGraphGenerator.py to generate a FatTree with k value of your choice. This will produce files out.txt,  mapping.txt and out.tcl. place out.txt, and
+Then use FatGraphGenerator.py to generate a FatTree with k value of your choice. This will produce files out.txt,  mapping.txt and out.tcl. 
 
-mapping.txt in the /ns-allinone-2.35/ns-2.35/common/ directory. These files contain topology information and mappings for info sharing DHT and are read
-
+Place out.txt, and mapping.txt in the /ns-allinone-2.35/ns-2.35/common/ directory. These files contain topology information and mappings for info sharing DHT and are read
 from node.cc file. 
 
 run out.tcl from ns to get the experiment going. 
