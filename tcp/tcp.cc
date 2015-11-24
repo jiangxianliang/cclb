@@ -1465,7 +1465,7 @@ void TcpAgent::expire (Event *e) {
         //poll_round_robin();
         //every_link_poll();
        // poll_btnk_per();
-        //poll_dht();
+        poll_dht();
         //cout << "Going to Poll " << btnk->node << endl;
     }
 }
@@ -1745,7 +1745,7 @@ void TcpAgent::poll_round_robin() {
     eSDN
 */
 void TcpAgent::poll_dht() { 
-    cout<<"POLL DHT"<<endl;
+    //cout<<"POLL DHT"<<endl;
 
     Flow_path* fp = flow_path;
     fetch_stats(flow_path->node,flow_path->next->node); // its own link. edge link. dont need to poll for that.
@@ -1827,7 +1827,7 @@ void TcpAgent::every_link_poll() {        // PER LINK POLL PER RTT
 void TcpAgent::opencwnd()
 { //HP
 
-
+    return; // we will do our rate adjustment ourselves. will not use this function for cwnd adjustment. 
     // printf("opencwnd() is good");   
     // cwnd_ = getRate();
     // return;

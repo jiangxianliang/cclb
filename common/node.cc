@@ -48,6 +48,16 @@
 #include "node.h"
 #include <iostream>
 #include <sstream>
+#include <unistd.h>
+#include <sys/types.h>
+#include <pwd.h>
+#include <cstdlib>
+#include <iostream>
+#include <string.h>
+#include <stdio.h>
+#include <fstream>
+
+ 
  using namespace std;
 
 Total_count* t_c = NULL;
@@ -133,14 +143,26 @@ Node::Node() :
 	ifstream fin,fin2;
 
 	//cout << "XXXXXXXXXXXXXX    FOR EACH NODE XXXXXXXXXXXX"<<endl;
-	fin.open("/home/hasnain/ns-allinone-2.35/ns-2.35/common/out.txt");
-	fin2.open("/home/hasnain/ns-allinone-2.35/ns-2.35/common/mapping.txt");
+	//fin.open("/home/hasnain/ns-allinone-2.35/ns-2.35/common/out.txt");
+	//fin2.open("/home/hasnain/ns-allinone-2.35/ns-2.35/common/mapping.txt");
+	const char *homedir;
+
+	if ((homedir = getenv("HOME")) == NULL) {
+    	homedir = getpwuid(getuid())->pw_dir;
+    }
+    string s = string (homedir);
+    string outDotTxt = s + "/ns-allinone-2.35/ns-2.35/common/out.txt";
+    string mappingDotTxt = s + "/ns-allinone-2.35/ns-2.35/common/mapping.txt";
+
+	fin.open(outDotTxt.c_str());
+	fin2.open(mappingDotTxt.c_str());
+
 	if (fin.fail()){
 		printf("TOPOLOGY FILE NOT FOUND");
-	}
+	} else printf("Suscesfully opened out.txt\n");
 	if (fin2.fail()){
 		printf("TOPO NOT FOUND");
-	}
+	} else printf("successfully opened mapping.txt\n");
 	string b1;
 	// for (int i=0;i<=t_c->count;i++){
 	// 	getline(fin2,b1);
