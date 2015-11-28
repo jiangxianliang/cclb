@@ -937,6 +937,7 @@ void TcpAgent::sendmsg(int nbytes, const char* /*flags*/)
 
 void TcpAgent::advanceby(int delta)
 {
+    printf("\nadvancing by delta:: %d\n", delta);
   curseq_ += delta;
     if (delta > 0)
         closed_ = 0;
@@ -972,7 +973,7 @@ void TcpAgent::incrementFlows() {
     Node *me = Node::get_node_by_address(addr());
     Flow_path* fp = flow_path;
     if (fp==NULL)
-        cout<<"FUCK ME"<<endl;
+        cout<<"flows not initialized seg fault will occur"<<endl;
     while(fp->next!=NULL){
 
         for (int j = 0;j<me->topo_links.size();j++){
@@ -1051,7 +1052,7 @@ int TcpAgent::command(int argc, const char*const* argv)
             // Node *me = Node::get_node_by_address(addr());
             // me->num_flow--;
             cwnd_ = 0;
-           decrementFlows();
+            decrementFlows();
             if (DHT12){
                 init_DHT(0);
             }

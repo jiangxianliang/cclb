@@ -3,3 +3,5 @@
 *.tex
 ns
 nstk
+/common/mapping.txt
+/common/out.txt
