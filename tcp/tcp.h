@@ -92,13 +92,14 @@ struct hdr_tcp {
 #define	TCP_REASON_DUPACK	0x02
 #define	TCP_REASON_RBP		0x03   // used only in tcp-rbp.cc
 #define TCP_REASON_PARTIALACK   0x04
+
 // eSDN DHT DEFINES xxxxxxxxxxxxxxxxx
-#define DHT12 0
+#define DHT12 1
 #define HOST_PER_RACK 2
 #define HOST_PER_POD 4 // do it in terms of k. 
 //xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-/* these are reasons we adjusted our congestion window */
 
+/* these are reasons we adjusted our congestion window */
 
 #define	CWND_ACTION_DUPACK	1	// dup acks/fast retransmit
 #define	CWND_ACTION_TIMEOUT	2	// retransmission timeout
