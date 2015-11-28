@@ -1,3 +1,5 @@
 *.o
 *.pdf
 *.tex
+ns
+nstk
