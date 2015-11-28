@@ -157,12 +157,13 @@ Node::Node() :
 	fin.open(outDotTxt.c_str());
 	fin2.open(mappingDotTxt.c_str());
 
-	if (fin.fail()){
+	if (fin.fail()) {
 		printf("TOPOLOGY FILE NOT FOUND");
-	} else printf("Suscesfully opened out.txt\n");
-	if (fin2.fail()){
+	}
+
+	if (fin2.fail()) {
 		printf("TOPO NOT FOUND");
-	} else printf("successfully opened mapping.txt\n");
+	}
 	string b1;
 	// for (int i=0;i<=t_c->count;i++){
 	// 	getline(fin2,b1);
