@@ -1,0 +1,6 @@
+*.nam
+*.o
+*.tex
+qmon.*
+*.ps
+*.gp

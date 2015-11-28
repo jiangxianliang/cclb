@@ -58,6 +58,7 @@ static const char rcsid[] =
 int hdr_tcp::offset_;
 
 //declare them here to avoid the undefined method error
+//eSDN util function
 bool compare_strings_(char* x, char *y) {
     for (int i =0; i < 67; i++) {
         if (x[i] != y[i]) {
@@ -70,6 +71,7 @@ bool compare_strings_(char* x, char *y) {
 }
     
 // Converts teh int to char and concats
+// eSDN util function
 char* concat_(int src, int src_prt, int dst, int dst_prt)
 {
     char* arr = new char[67];
@@ -103,7 +105,7 @@ public:
     }
 } class_tcp;
 
-
+// eSDN: this one is not being used currently. see below. 
 void TcpAgent::install_path(int point){
     //cout<<"in install_path"<<endl;
     Node *me = Node::get_node_by_address(addr());
@@ -546,6 +548,9 @@ TcpAgent::trace(TracedVar* v)
 void
 TcpAgent::set_initial_window()
 {
+
+    cout << "Man set_initial_window() was called... you sure about this??? " << endl;
+
     if (syn_ && delay_growth_) {
         cwnd_ = 1; // CCLB CHANGE MADE cwnd_ = 1.0; 
         syn_connects_ = 0;
@@ -1466,6 +1471,11 @@ void TcpAgent::expire (Event *e) {
         //every_link_poll();
        // poll_btnk_per();
         poll_dht();
+
+        if (poll_off == 1)
+            cwnd_ = 0;
+
+
         //cout << "Going to Poll " << btnk->node << endl;
     }
 }
@@ -1575,7 +1585,7 @@ void TcpAgent::init_DHT( int status){   // status = 1 mean start, 0 mean end
                 for (int j=0;j<me->fixed_mappings[i].fixed_links.size();j++){
                     if(me->fixed_mappings[i].fixed_links[j].link_num == link_num){
 
-                       // for self managing links
+                       // for self managing links. WTF? 
                         if(me->fixed_mappings[i].address == addr()){
                             cout<<"I HAVE LINK "<<link_num<<endl;
                             for (int k=0;k<me->fixed_mappings[i].fixed_links[j].node_count.size();k++){
@@ -1586,6 +1596,8 @@ void TcpAgent::init_DHT( int status){   // status = 1 mean start, 0 mean end
                                     }
                                     else if(status == 0 ){
                                         me->fixed_mappings[i].fixed_links[j].node_count[k].count--;
+                                        cout << "Ending a flow!!! this should be printed... " << endl;
+
                                         break;
                                     }
                                 }
@@ -2247,6 +2259,11 @@ void TcpAgent::recv_newack_helper(Packet *pkt) {
 double
 TcpAgent::initial_window()
 {
+
+        cout << "Hey initial_window() got called ... " << endl;
+        cout << "Hey initial_window() got called ... " << endl;
+        cout << "Hey initial_window() got called ... " << endl;
+        cout << "Hey initial_window() got called ... " << endl;
         // If Quick-Start Request was approved, use that as a basis for
         // initial window
         if (qs_cwnd_) {

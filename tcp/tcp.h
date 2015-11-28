@@ -93,9 +93,9 @@ struct hdr_tcp {
 #define	TCP_REASON_RBP		0x03   // used only in tcp-rbp.cc
 #define TCP_REASON_PARTIALACK   0x04
 // eSDN DHT DEFINES xxxxxxxxxxxxxxxxx
-#define DHT12 0
+#define DHT12 1 // I think it turns DHT off and on. RAZA fuck you. 
 #define HOST_PER_RACK 2
-#define HOST_PER_POD 4 // do it in terms of k. 
+#define HOST_PER_POD 4 // do it in terms of k. latr. HP
 //xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 /* these are reasons we adjusted our congestion window */
 
@@ -210,14 +210,15 @@ public:
 	// end custom code	
 	TcpAgent();
 //	PollTimer poll;
-	Flow_path* flow_path;
+	Flow_path* flow_path; // eSDN path of this flow in terms of node IDs
 	//vector<int> f_path;
-	virtual void send_one_packet(); // CUSTOM sends one packet
-	virtual void print_pathway(); // CUSTOM prints the pathway in the gloabl pathway object	
-	virtual void expire (Event *e);
-	void incrementFlows();
-	void install_path(int point);
-	void increment2(int a);
+	virtual void send_one_packet(); // CUSTOM sends one packet // eSDN
+	virtual void print_pathway(); // CUSTOM prints the pathway in the gloabl pathway object //eSDN	
+	virtual void expire (Event *e); 
+	// eSDN----------------------------------------------------------
+	void incrementFlows(); //eSDN
+	void install_path(int point); //eSDN
+	void increment2(int a); 
 	void decrementFlows();
 	void decrement2(int a);	
 	void every_link_poll();    
@@ -235,6 +236,8 @@ public:
 	int btnk_fix;
 	void poll_per1();
 	int btnk_wait;
+
+	//eSDN ----------------------------------------------------------------
 
 	virtual ~TcpAgent() {free(tss);}
         virtual void recv(Packet*, Handler*);
