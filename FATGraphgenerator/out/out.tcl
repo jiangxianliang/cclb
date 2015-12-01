@@ -147,8 +147,10 @@ for { set i 0 } { $i < 36 } { incr i } {
 }
 
 # TODO: start flows herer
-set tcp2 [build-tcp $n(0) $n(8) 1.5 2.8];
+set tcp2 [build-tcp $n(0) $n(8) 1.5 2.5];
+set tcp2 [build-tcp $n(2) $n(15) 1.5 2.5];
 
-$ns at 6.0 "finish"
+
+$ns at 4.0 "finish"
 puts "running ns"
 $ns run
