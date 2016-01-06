@@ -55,13 +55,18 @@ static const char rcsid[] =
 #include <iostream>
 using namespace std;
 
-int hdr_tcp::offset_;
+int
+hdr_tcp::offset_;
 
 //declare them here to avoid the undefined method error
 //eSDN util function
-bool compare_strings_(char* x, char *y) {
-    for (int i =0; i < 67; i++) {
-        if (x[i] != y[i]) {
+    bool
+compare_strings_ (char *x, char *y)
+{
+    for (int i = 0; i < 67; i++)
+    {
+        if (x[i] != y[i])
+        {
             //cout<<"FALSE"<<endl;
             return false;
         }
@@ -72,58 +77,78 @@ bool compare_strings_(char* x, char *y) {
 
 // Converts teh int to char and concats
 // eSDN util function
-char* concat_(int src, int src_prt, int dst, int dst_prt)
+char*
+concat_ (int src, int src_prt, int dst, int dst_prt)
 {
-    char* arr = new char[67];
+    int size = 65;
+    char* arr = new char[size];
+
     // init array
-    for (int i = 0; i < 67; ++i)
+    for (int i = 0; i < size; ++i)
     {
         arr[i] = 0;
     }
+
+    // FIXED:: array indices fixed
+    // sameed problem must be 32
+	// must be 48
+
     // put int
     arr[0] = src;
     arr[16] = src_prt;
-    arr[33] = dst; // sameed problem must be 32
-    arr[50] = dst_prt;  // must be 48
+    arr[32] = dst;
+    arr[48] = dst_prt;
     return arr;
 }
 
 
-static class TCPHeaderClass : public PacketHeaderClass {
+static class TCPHeaderClass: public PacketHeaderClass
+{
     public:
-        TCPHeaderClass() : PacketHeaderClass("PacketHeader/TCP",
-                sizeof(hdr_tcp)) {
-            bind_offset(&hdr_tcp::offset_);
-        }
+        TCPHeaderClass ():
+            PacketHeaderClass ("PacketHeader/TCP", sizeof (hdr_tcp))
+    {
+        bind_offset (&hdr_tcp::offset_);
+    }
 } class_tcphdr;
 
-static class TcpClass : public TclClass {
+static class TcpClass: public TclClass
+{
     public:
-        TcpClass() : TclClass("Agent/TCP") {}
-        TclObject* create(int , const char*const*) {
-            return (new TcpAgent());
-        }
+        TcpClass ():
+            TclClass ("Agent/TCP")
+    {
+    }
+        TclObject *
+            create (int, const char *const *)
+            {
+                return (new TcpAgent ());
+            }
 } class_tcp;
 
 // eSDN: this one is not being used currently. see below.
-void TcpAgent::install_path(int point){
+void
+TcpAgent::install_path (int point)
+{
     //cout<<"in install_path"<<endl;
-    Node *me = Node::get_node_by_address(addr());
+    Node *me = Node::get_node_by_address (addr ());
 
-    if (flow_path == NULL){
-        Flow_path* fp = new Flow_path;
+    if (flow_path == NULL)
+    {
+        Flow_path *fp = new Flow_path;
         fp->node = me->topo_links[point].n_start;
         fp->next = NULL;
         flow_path = fp;
-        cout<<fp->node<<"   ";
+        cout << fp->node << "   ";
     }
-    Flow_path* ff = new Flow_path;
+    Flow_path *ff = new Flow_path;
     ff->node = me->topo_links[point].n_end;
     ff->next = NULL;
-    Flow_path* pp = flow_path;
-    cout<<" "<<ff->node;
-    while(pp->next!=NULL){
-        pp=pp->next;
+    Flow_path *pp = flow_path;
+    cout << " " << ff->node;
+    while (pp->next != NULL)
+    {
+        pp = pp->next;
     }
     pp->next = ff;
 }
@@ -131,51 +156,55 @@ void TcpAgent::install_path(int point){
 /*
    eSDN. above function not being used.
    */
-void TcpAgent::install_path(){
-    Flow_path* fp = new Flow_path;
+void
+TcpAgent::install_path ()
+{
+    Flow_path *fp = new Flow_path;
     fp->node = here_.addr_;
     fp->next = NULL;
     int end = -1;
     int now = here_.addr_;
     flow_path = fp;
-    while(now != dst_.addr_){
-        int temp = rt_path->lookup_flat(now,dst_.addr_);
-        Flow_path* fp1 = new Flow_path;
+    while (now != dst_.addr_)
+    {
+        int temp = rt_path->lookup_flat (now, dst_.addr_);
+        Flow_path *fp1 = new Flow_path;
         fp1->node = temp;
         fp1->next = NULL;
         //f_path.push_back(temp);
         // adding into the linked list
-        Flow_path* temp2 = flow_path;
-        while(temp2->next != NULL){
-            temp2=temp2->next;
+        Flow_path *temp2 = flow_path;
+        while (temp2->next != NULL)
+        {
+            temp2 = temp2->next;
         }
         temp2->next = fp1;
         now = temp;
     }
-    Flow_path* ab = flow_path;
-    printf("\n");
-    while (ab!=NULL){
-        printf("%d",ab->node);
-        ab=ab->next;
+    Flow_path *ab = flow_path;
+    printf ("\n");
+    while (ab != NULL)
+    {
+        printf ("%d", ab->node);
+        ab = ab->next;
     }
-    printf("\n");
+    printf ("\n");
 
-    prev_link = flow_path -> next;
+    prev_link = flow_path->next;
     btnk = flow_path->next;
 }
 
-    TcpAgent::TcpAgent()
-: Agent(PT_TCP),
-    t_seqno_(0), dupacks_(0), curseq_(0), highest_ack_(0),
-    cwnd_(0), ssthresh_(0), maxseq_(0), count_(0),
-    rtt_active_(0), rtt_seq_(-1), rtt_ts_(0.0),
-    lastreset_(0.0), closed_(0), t_rtt_(0), t_srtt_(0), t_rttvar_(0),
-    t_backoff_(0), ts_peer_(0), ts_echo_(0), tss(NULL), tss_size_(100),
-    rtx_timer_(this), delsnd_timer_(this), burstsnd_timer_(this),
-    first_decrease_(1), fcnt_(0), nrexmit_(0), restart_bugfix_(1),
-    cong_action_(0), ecn_burst_(0), ecn_backoff_(0), ect_(0),
-    use_rtt_(0), qs_requested_(0), qs_approved_(0),
-    qs_window_(0), qs_cwnd_(0), frto_(0),TimerHandler()
+TcpAgent::TcpAgent ():Agent (PT_TCP),
+    t_seqno_ (0), dupacks_ (0), curseq_ (0), highest_ack_ (0),
+    cwnd_ (0), ssthresh_ (0), maxseq_ (0), count_ (0),
+    rtt_active_ (0), rtt_seq_ (-1), rtt_ts_ (0.0),
+    lastreset_ (0.0), closed_ (0), t_rtt_ (0), t_srtt_ (0), t_rttvar_ (0),
+    t_backoff_ (0), ts_peer_ (0), ts_echo_ (0), tss (NULL), tss_size_ (100),
+    rtx_timer_ (this), delsnd_timer_ (this), burstsnd_timer_ (this),
+    first_decrease_ (1), fcnt_ (0), nrexmit_ (0), restart_bugfix_ (1),
+    cong_action_ (0), ecn_burst_ (0), ecn_backoff_ (0), ect_ (0),
+    use_rtt_ (0), qs_requested_ (0), qs_approved_ (0),
+    qs_window_ (0), qs_cwnd_ (0), frto_ (0), TimerHandler ()
 {
     flow_path = NULL;
     poll_off = 0;
@@ -184,357 +213,501 @@ void TcpAgent::install_path(){
     //btnk_fix = BTNK_POLL; // for fixed
 
     // btnk for random delay
-    btnk_wait = rand()%15+10;
+    btnk_wait = rand () % 15 + 10;
     btnk_fix = btnk_wait;
 
 #ifdef TCP_DELAY_BIND_ALL
     // defined since Dec 1999.
 #else /* ! TCP_DELAY_BIND_ALL */
-    bind("t_seqno_", &t_seqno_);
-    bind("rtt_", &t_rtt_);
-    bind("srtt_", &t_srtt_);
-    bind("rttvar_", &t_rttvar_);
-    bind("backoff_", &t_backoff_);
-    bind("dupacks_", &dupacks_);
-    bind("seqno_", &curseq_);
-    bind("ack_", &highest_ack_);
-    bind("cwnd_", &cwnd_);
-    bind("ssthresh_", &ssthresh_);
-    bind("maxseq_", &maxseq_);
-    bind("ndatapack_", &ndatapack_);
-    bind("ndatabytes_", &ndatabytes_);
-    bind("nackpack_", &nackpack_);
-    bind("nrexmit_", &nrexmit_);
-    bind("nrexmitpack_", &nrexmitpack_);
-    bind("nrexmitbytes_", &nrexmitbytes_);
-    bind("necnresponses_", &necnresponses_);
-    bind("ncwndcuts_", &ncwndcuts_);
-    bind("ncwndcuts1_", &ncwndcuts1_);
+    bind ("t_seqno_", &t_seqno_);
+    bind ("rtt_", &t_rtt_);
+    bind ("srtt_", &t_srtt_);
+    bind ("rttvar_", &t_rttvar_);
+    bind ("backoff_", &t_backoff_);
+    bind ("dupacks_", &dupacks_);
+    bind ("seqno_", &curseq_);
+    bind ("ack_", &highest_ack_);
+    bind ("cwnd_", &cwnd_);
+    bind ("ssthresh_", &ssthresh_);
+    bind ("maxseq_", &maxseq_);
+    bind ("ndatapack_", &ndatapack_);
+    bind ("ndatabytes_", &ndatabytes_);
+    bind ("nackpack_", &nackpack_);
+    bind ("nrexmit_", &nrexmit_);
+    bind ("nrexmitpack_", &nrexmitpack_);
+    bind ("nrexmitbytes_", &nrexmitbytes_);
+    bind ("necnresponses_", &necnresponses_);
+    bind ("ncwndcuts_", &ncwndcuts_);
+    bind ("ncwndcuts1_", &ncwndcuts1_);
 
     // used by DCTCP
-    bind("dctcp_", &dctcp_);
-    bind("dctcp_alpha_", &dctcp_alpha_);
-    bind("dctcp_g_", &dctcp_g_);
+    bind ("dctcp_", &dctcp_);
+    bind ("dctcp_alpha_", &dctcp_alpha_);
+    bind ("dctcp_g_", &dctcp_g_);
 #endif /* TCP_DELAY_BIND_ALL */
 
 }
 
     void
-TcpAgent::delay_bind_init_all()
+TcpAgent::delay_bind_init_all ()
 {
 
     // Defaults for bound variables should be set in ns-default.tcl.
-    delay_bind_init_one("window_");
-    delay_bind_init_one("windowInit_");
-    delay_bind_init_one("windowInitOption_");
+    delay_bind_init_one ("window_");
+    delay_bind_init_one ("windowInit_");
+    delay_bind_init_one ("windowInitOption_");
 
-    delay_bind_init_one("syn_");
-    delay_bind_init_one("max_connects_");
-    delay_bind_init_one("windowOption_");
-    delay_bind_init_one("windowConstant_");
-    delay_bind_init_one("windowThresh_");
-    delay_bind_init_one("delay_growth_");
-    delay_bind_init_one("overhead_");
-    delay_bind_init_one("tcpTick_");
-    delay_bind_init_one("ecn_");
+    delay_bind_init_one ("syn_");
+    delay_bind_init_one ("max_connects_");
+    delay_bind_init_one ("windowOption_");
+    delay_bind_init_one ("windowConstant_");
+    delay_bind_init_one ("windowThresh_");
+    delay_bind_init_one ("delay_growth_");
+    delay_bind_init_one ("overhead_");
+    delay_bind_init_one ("tcpTick_");
+    delay_bind_init_one ("ecn_");
 
     // used by DCTCP
-    delay_bind_init_one("dctcp_");
-    delay_bind_init_one("dctcp_alpha_");
-    delay_bind_init_one("dctcp_g_");
+    delay_bind_init_one ("dctcp_");
+    delay_bind_init_one ("dctcp_alpha_");
+    delay_bind_init_one ("dctcp_g_");
 
-    delay_bind_init_one("SetCWRonRetransmit_");
-    delay_bind_init_one("old_ecn_");
-    delay_bind_init_one("bugfix_ss_");
-    delay_bind_init_one("eln_");
-    delay_bind_init_one("eln_rxmit_thresh_");
-    delay_bind_init_one("packetSize_");
-    delay_bind_init_one("tcpip_base_hdr_size_");
-    delay_bind_init_one("ts_option_size_");
-    delay_bind_init_one("bugFix_");
-    delay_bind_init_one("bugFix_ack_");
-    delay_bind_init_one("bugFix_ts_");
-    delay_bind_init_one("lessCareful_");
-    delay_bind_init_one("slow_start_restart_");
-    delay_bind_init_one("restart_bugfix_");
-    delay_bind_init_one("timestamps_");
-    delay_bind_init_one("ts_resetRTO_");
-    delay_bind_init_one("maxburst_");
-    delay_bind_init_one("aggressive_maxburst_");
-    delay_bind_init_one("maxcwnd_");
-    delay_bind_init_one("numdupacks_");
-    delay_bind_init_one("numdupacksFrac_");
-    delay_bind_init_one("exitFastRetrans_");
-    delay_bind_init_one("maxrto_");
-    delay_bind_init_one("minrto_");
-    delay_bind_init_one("srtt_init_");
-    delay_bind_init_one("rttvar_init_");
-    delay_bind_init_one("rtxcur_init_");
-    delay_bind_init_one("T_SRTT_BITS");
-    delay_bind_init_one("T_RTTVAR_BITS");
-    delay_bind_init_one("rttvar_exp_");
-    delay_bind_init_one("awnd_");
-    delay_bind_init_one("decrease_num_");
-    delay_bind_init_one("increase_num_");
-    delay_bind_init_one("k_parameter_");
-    delay_bind_init_one("l_parameter_");
-    delay_bind_init_one("trace_all_oneline_");
-    delay_bind_init_one("nam_tracevar_");
+    delay_bind_init_one ("SetCWRonRetransmit_");
+    delay_bind_init_one ("old_ecn_");
+    delay_bind_init_one ("bugfix_ss_");
+    delay_bind_init_one ("eln_");
+    delay_bind_init_one ("eln_rxmit_thresh_");
+    delay_bind_init_one ("packetSize_");
+    delay_bind_init_one ("tcpip_base_hdr_size_");
+    delay_bind_init_one ("ts_option_size_");
+    delay_bind_init_one ("bugFix_");
+    delay_bind_init_one ("bugFix_ack_");
+    delay_bind_init_one ("bugFix_ts_");
+    delay_bind_init_one ("lessCareful_");
+    delay_bind_init_one ("slow_start_restart_");
+    delay_bind_init_one ("restart_bugfix_");
+    delay_bind_init_one ("timestamps_");
+    delay_bind_init_one ("ts_resetRTO_");
+    delay_bind_init_one ("maxburst_");
+    delay_bind_init_one ("aggressive_maxburst_");
+    delay_bind_init_one ("maxcwnd_");
+    delay_bind_init_one ("numdupacks_");
+    delay_bind_init_one ("numdupacksFrac_");
+    delay_bind_init_one ("exitFastRetrans_");
+    delay_bind_init_one ("maxrto_");
+    delay_bind_init_one ("minrto_");
+    delay_bind_init_one ("srtt_init_");
+    delay_bind_init_one ("rttvar_init_");
+    delay_bind_init_one ("rtxcur_init_");
+    delay_bind_init_one ("T_SRTT_BITS");
+    delay_bind_init_one ("T_RTTVAR_BITS");
+    delay_bind_init_one ("rttvar_exp_");
+    delay_bind_init_one ("awnd_");
+    delay_bind_init_one ("decrease_num_");
+    delay_bind_init_one ("increase_num_");
+    delay_bind_init_one ("k_parameter_");
+    delay_bind_init_one ("l_parameter_");
+    delay_bind_init_one ("trace_all_oneline_");
+    delay_bind_init_one ("nam_tracevar_");
 
-    delay_bind_init_one("QOption_");
-    delay_bind_init_one("EnblRTTCtr_");
-    delay_bind_init_one("control_increase_");
-    delay_bind_init_one("noFastRetrans_");
-    delay_bind_init_one("precisionReduce_");
-    delay_bind_init_one("oldCode_");
-    delay_bind_init_one("useHeaders_");
-    delay_bind_init_one("low_window_");
-    delay_bind_init_one("high_window_");
-    delay_bind_init_one("high_p_");
-    delay_bind_init_one("high_decrease_");
-    delay_bind_init_one("max_ssthresh_");
-    delay_bind_init_one("cwnd_range_");
-    delay_bind_init_one("timerfix_");
-    delay_bind_init_one("rfc2988_");
-    delay_bind_init_one("singledup_");
-    delay_bind_init_one("LimTransmitFix_");
-    delay_bind_init_one("rate_request_");
-    delay_bind_init_one("qs_enabled_");
-    delay_bind_init_one("tcp_qs_recovery_");
-    delay_bind_init_one("qs_request_mode_");
-    delay_bind_init_one("qs_thresh_");
-    delay_bind_init_one("qs_rtt_");
-    delay_bind_init_one("print_request_");
+    delay_bind_init_one ("QOption_");
+    delay_bind_init_one ("EnblRTTCtr_");
+    delay_bind_init_one ("control_increase_");
+    delay_bind_init_one ("noFastRetrans_");
+    delay_bind_init_one ("precisionReduce_");
+    delay_bind_init_one ("oldCode_");
+    delay_bind_init_one ("useHeaders_");
+    delay_bind_init_one ("low_window_");
+    delay_bind_init_one ("high_window_");
+    delay_bind_init_one ("high_p_");
+    delay_bind_init_one ("high_decrease_");
+    delay_bind_init_one ("max_ssthresh_");
+    delay_bind_init_one ("cwnd_range_");
+    delay_bind_init_one ("timerfix_");
+    delay_bind_init_one ("rfc2988_");
+    delay_bind_init_one ("singledup_");
+    delay_bind_init_one ("LimTransmitFix_");
+    delay_bind_init_one ("rate_request_");
+    delay_bind_init_one ("qs_enabled_");
+    delay_bind_init_one ("tcp_qs_recovery_");
+    delay_bind_init_one ("qs_request_mode_");
+    delay_bind_init_one ("qs_thresh_");
+    delay_bind_init_one ("qs_rtt_");
+    delay_bind_init_one ("print_request_");
 
-    delay_bind_init_one("frto_enabled_");
-    delay_bind_init_one("sfrto_enabled_");
-    delay_bind_init_one("spurious_response_");
+    delay_bind_init_one ("frto_enabled_");
+    delay_bind_init_one ("sfrto_enabled_");
+    delay_bind_init_one ("spurious_response_");
 
 #ifdef TCP_DELAY_BIND_ALL
     // out because delay-bound tracevars aren't yet supported
-    delay_bind_init_one("t_seqno_");
-    delay_bind_init_one("rtt_");
-    delay_bind_init_one("srtt_");
-    delay_bind_init_one("rttvar_");
-    delay_bind_init_one("backoff_");
-    delay_bind_init_one("dupacks_");
-    delay_bind_init_one("seqno_");
-    delay_bind_init_one("ack_");
-    delay_bind_init_one("cwnd_");
-    delay_bind_init_one("ssthresh_");
-    delay_bind_init_one("maxseq_");
-    delay_bind_init_one("ndatapack_");
-    delay_bind_init_one("ndatabytes_");
-    delay_bind_init_one("nackpack_");
-    delay_bind_init_one("nrexmit_");
-    delay_bind_init_one("nrexmitpack_");
-    delay_bind_init_one("nrexmitbytes_");
-    delay_bind_init_one("necnresponses_");
-    delay_bind_init_one("ncwndcuts_");
-    delay_bind_init_one("ncwndcuts1_");
+    delay_bind_init_one ("t_seqno_");
+    delay_bind_init_one ("rtt_");
+    delay_bind_init_one ("srtt_");
+    delay_bind_init_one ("rttvar_");
+    delay_bind_init_one ("backoff_");
+    delay_bind_init_one ("dupacks_");
+    delay_bind_init_one ("seqno_");
+    delay_bind_init_one ("ack_");
+    delay_bind_init_one ("cwnd_");
+    delay_bind_init_one ("ssthresh_");
+    delay_bind_init_one ("maxseq_");
+    delay_bind_init_one ("ndatapack_");
+    delay_bind_init_one ("ndatabytes_");
+    delay_bind_init_one ("nackpack_");
+    delay_bind_init_one ("nrexmit_");
+    delay_bind_init_one ("nrexmitpack_");
+    delay_bind_init_one ("nrexmitbytes_");
+    delay_bind_init_one ("necnresponses_");
+    delay_bind_init_one ("ncwndcuts_");
+    delay_bind_init_one ("ncwndcuts1_");
 #endif /* TCP_DELAY_BIND_ALL */
 
-    Agent::delay_bind_init_all();
+    Agent::delay_bind_init_all ();
 
-    reset();
+    reset ();
 }
 
     int
-TcpAgent::delay_bind_dispatch(const char *varName, const char *localName, TclObject *tracer)
+TcpAgent::delay_bind_dispatch (const char *varName, const char *localName,
+        TclObject * tracer)
 {
-    if (delay_bind(varName, localName, "window_", &wnd_, tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "windowInit_", &wnd_init_, tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "windowInitOption_", &wnd_init_option_, tracer)) return TCL_OK;
-    if (delay_bind_bool(varName, localName, "syn_", &syn_, tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "max_connects_", &max_connects_, tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "windowOption_", &wnd_option_ , tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "windowConstant_",  &wnd_const_, tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "windowThresh_", &wnd_th_ , tracer)) return TCL_OK;
-    if (delay_bind_bool(varName, localName, "delay_growth_", &delay_growth_ , tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "overhead_", &overhead_, tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "tcpTick_", &tcp_tick_, tracer)) return TCL_OK;
-    if (delay_bind_bool(varName, localName, "ecn_", &ecn_, tracer)) return TCL_OK;
+    if (delay_bind (varName, localName, "window_", &wnd_, tracer))
+        return TCL_OK;
+    if (delay_bind (varName, localName, "windowInit_", &wnd_init_, tracer))
+        return TCL_OK;
+    if (delay_bind
+            (varName, localName, "windowInitOption_", &wnd_init_option_, tracer))
+        return TCL_OK;
+    if (delay_bind_bool (varName, localName, "syn_", &syn_, tracer))
+        return TCL_OK;
+    if (delay_bind
+            (varName, localName, "max_connects_", &max_connects_, tracer))
+        return TCL_OK;
+    if (delay_bind (varName, localName, "windowOption_", &wnd_option_, tracer))
+        return TCL_OK;
+    if (delay_bind (varName, localName, "windowConstant_", &wnd_const_, tracer))
+        return TCL_OK;
+    if (delay_bind (varName, localName, "windowThresh_", &wnd_th_, tracer))
+        return TCL_OK;
+    if (delay_bind_bool
+            (varName, localName, "delay_growth_", &delay_growth_, tracer))
+        return TCL_OK;
+    if (delay_bind (varName, localName, "overhead_", &overhead_, tracer))
+        return TCL_OK;
+    if (delay_bind (varName, localName, "tcpTick_", &tcp_tick_, tracer))
+        return TCL_OK;
+    if (delay_bind_bool (varName, localName, "ecn_", &ecn_, tracer))
+        return TCL_OK;
 
     // used by DCTCP
-    if (delay_bind_bool(varName, localName, "dctcp_", &dctcp_, tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "dctcp_alpha_", &dctcp_alpha_ , tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "dctcp_g_", &dctcp_g_ , tracer)) return TCL_OK;
+    if (delay_bind_bool (varName, localName, "dctcp_", &dctcp_, tracer))
+        return TCL_OK;
+    if (delay_bind (varName, localName, "dctcp_alpha_", &dctcp_alpha_, tracer))
+        return TCL_OK;
+    if (delay_bind (varName, localName, "dctcp_g_", &dctcp_g_, tracer))
+        return TCL_OK;
 
-    if (delay_bind_bool(varName, localName, "SetCWRonRetransmit_", &SetCWRonRetransmit_, tracer)) return TCL_OK;
-    if (delay_bind_bool(varName, localName, "old_ecn_", &old_ecn_ , tracer)) return TCL_OK;
-    if (delay_bind_bool(varName, localName, "bugfix_ss_", &bugfix_ss_ , tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "eln_", &eln_ , tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "eln_rxmit_thresh_", &eln_rxmit_thresh_ , tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "packetSize_", &size_ , tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "tcpip_base_hdr_size_", &tcpip_base_hdr_size_, tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "ts_option_size_", &ts_option_size_, tracer)) return TCL_OK;
-    if (delay_bind_bool(varName, localName, "bugFix_", &bug_fix_ , tracer)) return TCL_OK;
-    if (delay_bind_bool(varName, localName, "bugFix_ack_", &bugfix_ack_, tracer)) return TCL_OK;
-    if (delay_bind_bool(varName, localName, "bugFix_ts_", &bugfix_ts_ , tracer)) return TCL_OK;
-    if (delay_bind_bool(varName, localName, "lessCareful_", &less_careful_ , tracer)) return TCL_OK;
-    if (delay_bind_bool(varName, localName, "timestamps_", &ts_option_ , tracer)) return TCL_OK;
-    if (delay_bind_bool(varName, localName, "ts_resetRTO_", &ts_resetRTO_, tracer)) return TCL_OK;
-    if (delay_bind_bool(varName, localName, "slow_start_restart_", &slow_start_restart_ , tracer)) return TCL_OK;
-    if (delay_bind_bool(varName, localName, "restart_bugfix_", &restart_bugfix_ , tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "maxburst_", &maxburst_ , tracer)) return TCL_OK;
-    if (delay_bind_bool(varName, localName, "aggressive_maxburst_", &aggressive_maxburst_ , tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "maxcwnd_", &maxcwnd_ , tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "numdupacks_", &numdupacks_, tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "numdupacksFrac_", &numdupacksFrac_, tracer)) return TCL_OK;
-    if (delay_bind_bool(varName, localName, "exitFastRetrans_", &exitFastRetrans_, tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "maxrto_", &maxrto_ , tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "minrto_", &minrto_ , tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "srtt_init_", &srtt_init_ , tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "rttvar_init_", &rttvar_init_ , tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "rtxcur_init_", &rtxcur_init_ , tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "T_SRTT_BITS", &T_SRTT_BITS , tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "T_RTTVAR_BITS", &T_RTTVAR_BITS , tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "rttvar_exp_", &rttvar_exp_ , tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "awnd_", &awnd_ , tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "decrease_num_", &decrease_num_, tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "increase_num_", &increase_num_, tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "k_parameter_", &k_parameter_, tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "l_parameter_", &l_parameter_, tracer)) return TCL_OK;
+    if (delay_bind_bool
+            (varName, localName, "SetCWRonRetransmit_", &SetCWRonRetransmit_,
+             tracer))
+        return TCL_OK;
+    if (delay_bind_bool (varName, localName, "old_ecn_", &old_ecn_, tracer))
+        return TCL_OK;
+    if (delay_bind_bool (varName, localName, "bugfix_ss_", &bugfix_ss_, tracer))
+        return TCL_OK;
+    if (delay_bind (varName, localName, "eln_", &eln_, tracer))
+        return TCL_OK;
+    if (delay_bind
+            (varName, localName, "eln_rxmit_thresh_", &eln_rxmit_thresh_, tracer))
+        return TCL_OK;
+    if (delay_bind (varName, localName, "packetSize_", &size_, tracer))
+        return TCL_OK;
+    if (delay_bind
+            (varName, localName, "tcpip_base_hdr_size_", &tcpip_base_hdr_size_,
+             tracer))
+        return TCL_OK;
+    if (delay_bind
+            (varName, localName, "ts_option_size_", &ts_option_size_, tracer))
+        return TCL_OK;
+    if (delay_bind_bool (varName, localName, "bugFix_", &bug_fix_, tracer))
+        return TCL_OK;
+    if (delay_bind_bool
+            (varName, localName, "bugFix_ack_", &bugfix_ack_, tracer))
+        return TCL_OK;
+    if (delay_bind_bool (varName, localName, "bugFix_ts_", &bugfix_ts_, tracer))
+        return TCL_OK;
+    if (delay_bind_bool
+            (varName, localName, "lessCareful_", &less_careful_, tracer))
+        return TCL_OK;
+    if (delay_bind_bool
+            (varName, localName, "timestamps_", &ts_option_, tracer))
+        return TCL_OK;
+    if (delay_bind_bool
+            (varName, localName, "ts_resetRTO_", &ts_resetRTO_, tracer))
+        return TCL_OK;
+    if (delay_bind_bool
+            (varName, localName, "slow_start_restart_", &slow_start_restart_,
+             tracer))
+        return TCL_OK;
+    if (delay_bind_bool
+            (varName, localName, "restart_bugfix_", &restart_bugfix_, tracer))
+        return TCL_OK;
+    if (delay_bind (varName, localName, "maxburst_", &maxburst_, tracer))
+        return TCL_OK;
+    if (delay_bind_bool
+            (varName, localName, "aggressive_maxburst_", &aggressive_maxburst_,
+             tracer))
+        return TCL_OK;
+    if (delay_bind (varName, localName, "maxcwnd_", &maxcwnd_, tracer))
+        return TCL_OK;
+    if (delay_bind (varName, localName, "numdupacks_", &numdupacks_, tracer))
+        return TCL_OK;
+    if (delay_bind
+            (varName, localName, "numdupacksFrac_", &numdupacksFrac_, tracer))
+        return TCL_OK;
+    if (delay_bind_bool
+            (varName, localName, "exitFastRetrans_", &exitFastRetrans_, tracer))
+        return TCL_OK;
+    if (delay_bind (varName, localName, "maxrto_", &maxrto_, tracer))
+        return TCL_OK;
+    if (delay_bind (varName, localName, "minrto_", &minrto_, tracer))
+        return TCL_OK;
+    if (delay_bind (varName, localName, "srtt_init_", &srtt_init_, tracer))
+        return TCL_OK;
+    if (delay_bind (varName, localName, "rttvar_init_", &rttvar_init_, tracer))
+        return TCL_OK;
+    if (delay_bind (varName, localName, "rtxcur_init_", &rtxcur_init_, tracer))
+        return TCL_OK;
+    if (delay_bind (varName, localName, "T_SRTT_BITS", &T_SRTT_BITS, tracer))
+        return TCL_OK;
+    if (delay_bind
+            (varName, localName, "T_RTTVAR_BITS", &T_RTTVAR_BITS, tracer))
+        return TCL_OK;
+    if (delay_bind (varName, localName, "rttvar_exp_", &rttvar_exp_, tracer))
+        return TCL_OK;
+    if (delay_bind (varName, localName, "awnd_", &awnd_, tracer))
+        return TCL_OK;
+    if (delay_bind
+            (varName, localName, "decrease_num_", &decrease_num_, tracer))
+        return TCL_OK;
+    if (delay_bind
+            (varName, localName, "increase_num_", &increase_num_, tracer))
+        return TCL_OK;
+    if (delay_bind (varName, localName, "k_parameter_", &k_parameter_, tracer))
+        return TCL_OK;
+    if (delay_bind (varName, localName, "l_parameter_", &l_parameter_, tracer))
+        return TCL_OK;
 
 
-    if (delay_bind_bool(varName, localName, "trace_all_oneline_", &trace_all_oneline_ , tracer)) return TCL_OK;
-    if (delay_bind_bool(varName, localName, "nam_tracevar_", &nam_tracevar_ , tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "QOption_", &QOption_ , tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "EnblRTTCtr_", &EnblRTTCtr_ , tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "control_increase_", &control_increase_ , tracer)) return TCL_OK;
-    if (delay_bind_bool(varName, localName, "noFastRetrans_", &noFastRetrans_, tracer)) return TCL_OK;
-    if (delay_bind_bool(varName, localName, "precisionReduce_", &precision_reduce_, tracer)) return TCL_OK;
-    if (delay_bind_bool(varName, localName, "oldCode_", &oldCode_, tracer)) return TCL_OK;
-    if (delay_bind_bool(varName, localName, "useHeaders_", &useHeaders_, tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "low_window_", &low_window_, tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "high_window_", &high_window_, tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "high_p_", &high_p_, tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "high_decrease_", &high_decrease_, tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "max_ssthresh_", &max_ssthresh_, tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "cwnd_range_", &cwnd_range_, tracer)) return TCL_OK;
-    if (delay_bind_bool(varName, localName, "timerfix_", &timerfix_, tracer)) return TCL_OK;
-    if (delay_bind_bool(varName, localName, "rfc2988_", &rfc2988_, tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "singledup_", &singledup_ , tracer)) return TCL_OK;
-    if (delay_bind_bool(varName, localName, "LimTransmitFix_", &LimTransmitFix_ , tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "rate_request_", &rate_request_ , tracer)) return TCL_OK;
-    if (delay_bind_bool(varName, localName, "qs_enabled_", &qs_enabled_ , tracer)) return TCL_OK;
-    if (delay_bind_bool(varName, localName, "tcp_qs_recovery_", &tcp_qs_recovery_, tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "qs_request_mode_", &qs_request_mode_, tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "qs_thresh_", &qs_thresh_, tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "qs_rtt_", &qs_rtt_, tracer)) return TCL_OK;
-    if (delay_bind_bool(varName, localName, "print_request_", &print_request_, tracer)) return TCL_OK;
-    if (delay_bind_bool(varName, localName, "frto_enabled_", &frto_enabled_, tracer)) return TCL_OK;
-    if (delay_bind_bool(varName, localName, "sfrto_enabled_", &sfrto_enabled_, tracer)) return TCL_OK;
-    if (delay_bind_bool(varName, localName, "spurious_response_", &spurious_response_, tracer)) return TCL_OK;
+    if (delay_bind_bool
+            (varName, localName, "trace_all_oneline_", &trace_all_oneline_, tracer))
+        return TCL_OK;
+    if (delay_bind_bool
+            (varName, localName, "nam_tracevar_", &nam_tracevar_, tracer))
+        return TCL_OK;
+    if (delay_bind (varName, localName, "QOption_", &QOption_, tracer))
+        return TCL_OK;
+    if (delay_bind (varName, localName, "EnblRTTCtr_", &EnblRTTCtr_, tracer))
+        return TCL_OK;
+    if (delay_bind
+            (varName, localName, "control_increase_", &control_increase_, tracer))
+        return TCL_OK;
+    if (delay_bind_bool
+            (varName, localName, "noFastRetrans_", &noFastRetrans_, tracer))
+        return TCL_OK;
+    if (delay_bind_bool
+            (varName, localName, "precisionReduce_", &precision_reduce_, tracer))
+        return TCL_OK;
+    if (delay_bind_bool (varName, localName, "oldCode_", &oldCode_, tracer))
+        return TCL_OK;
+    if (delay_bind_bool
+            (varName, localName, "useHeaders_", &useHeaders_, tracer))
+        return TCL_OK;
+    if (delay_bind (varName, localName, "low_window_", &low_window_, tracer))
+        return TCL_OK;
+    if (delay_bind (varName, localName, "high_window_", &high_window_, tracer))
+        return TCL_OK;
+    if (delay_bind (varName, localName, "high_p_", &high_p_, tracer))
+        return TCL_OK;
+    if (delay_bind
+            (varName, localName, "high_decrease_", &high_decrease_, tracer))
+        return TCL_OK;
+    if (delay_bind
+            (varName, localName, "max_ssthresh_", &max_ssthresh_, tracer))
+        return TCL_OK;
+    if (delay_bind (varName, localName, "cwnd_range_", &cwnd_range_, tracer))
+        return TCL_OK;
+    if (delay_bind_bool (varName, localName, "timerfix_", &timerfix_, tracer))
+        return TCL_OK;
+    if (delay_bind_bool (varName, localName, "rfc2988_", &rfc2988_, tracer))
+        return TCL_OK;
+    if (delay_bind (varName, localName, "singledup_", &singledup_, tracer))
+        return TCL_OK;
+    if (delay_bind_bool
+            (varName, localName, "LimTransmitFix_", &LimTransmitFix_, tracer))
+        return TCL_OK;
+    if (delay_bind
+            (varName, localName, "rate_request_", &rate_request_, tracer))
+        return TCL_OK;
+    if (delay_bind_bool
+            (varName, localName, "qs_enabled_", &qs_enabled_, tracer))
+        return TCL_OK;
+    if (delay_bind_bool
+            (varName, localName, "tcp_qs_recovery_", &tcp_qs_recovery_, tracer))
+        return TCL_OK;
+    if (delay_bind
+            (varName, localName, "qs_request_mode_", &qs_request_mode_, tracer))
+        return TCL_OK;
+    if (delay_bind (varName, localName, "qs_thresh_", &qs_thresh_, tracer))
+        return TCL_OK;
+    if (delay_bind (varName, localName, "qs_rtt_", &qs_rtt_, tracer))
+        return TCL_OK;
+    if (delay_bind_bool
+            (varName, localName, "print_request_", &print_request_, tracer))
+        return TCL_OK;
+    if (delay_bind_bool
+            (varName, localName, "frto_enabled_", &frto_enabled_, tracer))
+        return TCL_OK;
+    if (delay_bind_bool
+            (varName, localName, "sfrto_enabled_", &sfrto_enabled_, tracer))
+        return TCL_OK;
+    if (delay_bind_bool
+            (varName, localName, "spurious_response_", &spurious_response_, tracer))
+        return TCL_OK;
 
 #ifdef TCP_DELAY_BIND_ALL
     // not if (delay-bound delay-bound tracevars aren't yet supported
-    if (delay_bind(varName, localName, "t_seqno_", &t_seqno_ , tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "rtt_", &t_rtt_ , tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "srtt_", &t_srtt_ , tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "rttvar_", &t_rttvar_ , tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "backoff_", &t_backoff_ , tracer)) return TCL_OK;
+    if (delay_bind (varName, localName, "t_seqno_", &t_seqno_, tracer))
+        return TCL_OK;
+    if (delay_bind (varName, localName, "rtt_", &t_rtt_, tracer))
+        return TCL_OK;
+    if (delay_bind (varName, localName, "srtt_", &t_srtt_, tracer))
+        return TCL_OK;
+    if (delay_bind (varName, localName, "rttvar_", &t_rttvar_, tracer))
+        return TCL_OK;
+    if (delay_bind (varName, localName, "backoff_", &t_backoff_, tracer))
+        return TCL_OK;
 
-    if (delay_bind(varName, localName, "dupacks_", &dupacks_ , tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "seqno_", &curseq_ , tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "ack_", &highest_ack_ , tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "cwnd_", &cwnd_ , tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "ssthresh_", &ssthresh_ , tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "maxseq_", &maxseq_ , tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "ndatapack_", &ndatapack_ , tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "ndatabytes_", &ndatabytes_ , tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "nackpack_", &nackpack_ , tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "nrexmit_", &nrexmit_ , tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "nrexmitpack_", &nrexmitpack_ , tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "nrexmitbytes_", &nrexmitbytes_ , tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "necnresponses_", &necnresponses_ , tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "ncwndcuts_", &ncwndcuts_ , tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "ncwndcuts1_", &ncwndcuts1_ , tracer)) return TCL_OK;
+    if (delay_bind (varName, localName, "dupacks_", &dupacks_, tracer))
+        return TCL_OK;
+    if (delay_bind (varName, localName, "seqno_", &curseq_, tracer))
+        return TCL_OK;
+    if (delay_bind (varName, localName, "ack_", &highest_ack_, tracer))
+        return TCL_OK;
+    if (delay_bind (varName, localName, "cwnd_", &cwnd_, tracer))
+        return TCL_OK;
+    if (delay_bind (varName, localName, "ssthresh_", &ssthresh_, tracer))
+        return TCL_OK;
+    if (delay_bind (varName, localName, "maxseq_", &maxseq_, tracer))
+        return TCL_OK;
+    if (delay_bind (varName, localName, "ndatapack_", &ndatapack_, tracer))
+        return TCL_OK;
+    if (delay_bind (varName, localName, "ndatabytes_", &ndatabytes_, tracer))
+        return TCL_OK;
+    if (delay_bind (varName, localName, "nackpack_", &nackpack_, tracer))
+        return TCL_OK;
+    if (delay_bind (varName, localName, "nrexmit_", &nrexmit_, tracer))
+        return TCL_OK;
+    if (delay_bind (varName, localName, "nrexmitpack_", &nrexmitpack_, tracer))
+        return TCL_OK;
+    if (delay_bind
+            (varName, localName, "nrexmitbytes_", &nrexmitbytes_, tracer))
+        return TCL_OK;
+    if (delay_bind
+            (varName, localName, "necnresponses_", &necnresponses_, tracer))
+        return TCL_OK;
+    if (delay_bind (varName, localName, "ncwndcuts_", &ncwndcuts_, tracer))
+        return TCL_OK;
+    if (delay_bind (varName, localName, "ncwndcuts1_", &ncwndcuts1_, tracer))
+        return TCL_OK;
 
 #endif
 
-    return Agent::delay_bind_dispatch(varName, localName, tracer);
+    return Agent::delay_bind_dispatch (varName, localName, tracer);
 }
 
 #define TCP_WRK_SIZE        512
 /* Print out all the traced variables whenever any one is changed */
-void
-TcpAgent::traceAll() {
+    void
+TcpAgent::traceAll ()
+{
     if (!channel_)
         return;
 
     double curtime;
-    Scheduler& s = Scheduler::instance();
+    Scheduler & s = Scheduler::instance ();
     char wrk[TCP_WRK_SIZE];
 
-    curtime = &s ? s.clock() : 0;
-    snprintf(wrk, TCP_WRK_SIZE,
+    curtime = &s ? s.clock () : 0;
+    snprintf (wrk, TCP_WRK_SIZE,
             "time: %-8.5f saddr: %-2d sport: %-2d daddr: %-2d dport:"
             " %-2d maxseq: %-4d hiack: %-4d seqno: %-4d cwnd: %-6.3f"
             " ssthresh: %-3d dupacks: %-2d rtt: %-6.3f srtt: %-6.3f"
-            " rttvar: %-6.3f bkoff: %-d\n", curtime, addr(), port(),
-            daddr(), dport(), int(maxseq_), int(highest_ack_),
-            int(t_seqno_), double(cwnd_), int(ssthresh_),
-            int(dupacks_), int(t_rtt_)*tcp_tick_,
-            (int(t_srtt_) >> T_SRTT_BITS)*tcp_tick_,
-            int(t_rttvar_)*tcp_tick_/4.0, int(t_backoff_));
-    (void)Tcl_Write(channel_, wrk, -1);
+            " rttvar: %-6.3f bkoff: %-d\n", curtime, addr (), port (),
+            daddr (), dport (), int (maxseq_), int (highest_ack_),
+            int (t_seqno_), double (cwnd_), int (ssthresh_),
+            int (dupacks_), int (t_rtt_) * tcp_tick_,
+            (int (t_srtt_) >> T_SRTT_BITS) *tcp_tick_,
+            int (t_rttvar_) * tcp_tick_ / 4.0, int (t_backoff_));
+    (void) Tcl_Write (channel_, wrk, -1);
 }
 
 /* Print out just the variable that is modified */
     void
-TcpAgent::traceVar(TracedVar* v)
+TcpAgent::traceVar (TracedVar * v)
 {
     if (!channel_)
         return;
 
     double curtime;
-    Scheduler& s = Scheduler::instance();
+    Scheduler & s = Scheduler::instance ();
     char wrk[TCP_WRK_SIZE];
 
-    curtime = &s ? s.clock() : 0;
+    curtime = &s ? s.clock () : 0;
 
     // XXX comparing addresses is faster than comparing names
     if (v == &cwnd_)
-        snprintf(wrk, TCP_WRK_SIZE,
+        snprintf (wrk, TCP_WRK_SIZE,
                 "%-8.5f %-2d %-2d %-2d %-2d %s %-6.3f\n",
-                curtime, addr(), port(), daddr(), dport(),
-                v->name(), double(*((TracedDouble*) v)));
+                curtime, addr (), port (), daddr (), dport (),
+                v->name (), double (*((TracedDouble *) v)));
     else if (v == &t_rtt_)
-        snprintf(wrk, TCP_WRK_SIZE,
+        snprintf (wrk, TCP_WRK_SIZE,
                 "%-8.5f %-2d %-2d %-2d %-2d %s %-6.3f\n",
-                curtime, addr(), port(), daddr(), dport(),
-                v->name(), int(*((TracedInt*) v))*tcp_tick_);
+                curtime, addr (), port (), daddr (), dport (),
+                v->name (), int (*((TracedInt *) v)) * tcp_tick_);
     else if (v == &t_srtt_)
-        snprintf(wrk, TCP_WRK_SIZE,
+        snprintf (wrk, TCP_WRK_SIZE,
                 "%-8.5f %-2d %-2d %-2d %-2d %s %-6.3f\n",
-                curtime, addr(), port(), daddr(), dport(),
-                v->name(),
-                (int(*((TracedInt*) v)) >> T_SRTT_BITS)*tcp_tick_);
+                curtime, addr (), port (), daddr (), dport (),
+                v->name (),
+                (int (*((TracedInt *) v)) >> T_SRTT_BITS) *tcp_tick_);
     else if (v == &t_rttvar_)
-        snprintf(wrk, TCP_WRK_SIZE,
+        snprintf (wrk, TCP_WRK_SIZE,
                 "%-8.5f %-2d %-2d %-2d %-2d %s %-6.3f\n",
-                curtime, addr(), port(), daddr(), dport(),
-                v->name(),
-                int(*((TracedInt*) v))*tcp_tick_/4.0);
+                curtime, addr (), port (), daddr (), dport (),
+                v->name (), int (*((TracedInt *) v)) * tcp_tick_ / 4.0);
     else
-        snprintf(wrk, TCP_WRK_SIZE,
+        snprintf (wrk, TCP_WRK_SIZE,
                 "%-8.5f %-2d %-2d %-2d %-2d %s %d\n",
-                curtime, addr(), port(), daddr(), dport(),
-                v->name(), int(*((TracedInt*) v)));
+                curtime, addr (), port (), daddr (), dport (),
+                v->name (), int (*((TracedInt *) v)));
 
-    (void)Tcl_Write(channel_, wrk, -1);
+    (void) Tcl_Write (channel_, wrk, -1);
 }
 
     void
-TcpAgent::trace(TracedVar* v)
+TcpAgent::trace (TracedVar * v)
 {
-    if (nam_tracevar_) {
-        Agent::trace(v);
-    } else if (trace_all_oneline_)
-        traceAll();
+    if (nam_tracevar_)
+    {
+        Agent::trace (v);
+    }
+    else if (trace_all_oneline_)
+        traceAll ();
     else
-        traceVar(v);
+        traceVar (v);
 }
 
 //
@@ -546,52 +719,55 @@ TcpAgent::trace(TracedVar* v)
 //
 
     void
-TcpAgent::set_initial_window()
+TcpAgent::set_initial_window ()
 {
 
-    cout << "Man set_initial_window() was called... you sure about this??? " << endl;
+    cout << "Man set_initial_window() was called... you sure about this??? " <<
+        endl;
 
-    if (syn_ && delay_growth_) {
-        cwnd_ = 1; // CCLB CHANGE MADE cwnd_ = 1.0;
+    if (syn_ && delay_growth_)
+    {
+        cwnd_ = 1;		// CCLB CHANGE MADE cwnd_ = 1.0;
         syn_connects_ = 0;
-    } else
-        cwnd_ = initial_window(); // CCLB CHANGE MADE   cwnd_ = initial_window();
+    }
+    else
+        cwnd_ = initial_window ();	// CCLB CHANGE MADE   cwnd_ = initial_window();
 
 
     //cwnd_ = 0; // CCLB REMOVE LATER
 }
 
     void
-TcpAgent::reset_qoption()
+TcpAgent::reset_qoption ()
 {
-    int now = (int)(Scheduler::instance().clock()/tcp_tick_ + 0.5);
+    int now = (int) (Scheduler::instance ().clock () / tcp_tick_ + 0.5);
 
-    T_start = now ;
-    RTT_count = 0 ;
-    RTT_prev = 0 ;
-    RTT_goodcount = 1 ;
-    F_counting = 0 ;
-    W_timed = -1 ;
-    F_full = 0 ;
-    Backoffs = 0 ;
+    T_start = now;
+    RTT_count = 0;
+    RTT_prev = 0;
+    RTT_goodcount = 1;
+    F_counting = 0;
+    W_timed = -1;
+    F_full = 0;
+    Backoffs = 0;
 }
 
     void
-TcpAgent::reset()
+TcpAgent::reset ()
 {
-    rtt_init();
+    rtt_init ();
     rtt_seq_ = -1;
     /*XXX lookup variables */
     dupacks_ = 0;
     curseq_ = 0;
-    set_initial_window();
+    set_initial_window ();
 
     t_seqno_ = 0;
     maxseq_ = -1;
     last_ack_ = -1;
     highest_ack_ = -1;
     //highest_ack_ = 1;
-    ssthresh_ = int(wnd_);
+    ssthresh_ = int (wnd_);
     if (max_ssthresh_ > 0 && max_ssthresh_ < ssthresh_)
         ssthresh_ = max_ssthresh_;
     wnd_restart_ = 1.;
@@ -599,10 +775,10 @@ TcpAgent::reset()
     recover_ = 0;
     closed_ = 0;
     last_cwnd_action_ = 0;
-    boot_time_ = Random::uniform(tcp_tick_);
+    boot_time_ = Random::uniform (tcp_tick_);
     first_decrease_ = 1;
     /* W.N.: for removing packets from previous incarnations */
-    lastreset_ = Scheduler::instance().clock();
+    lastreset_ = Scheduler::instance ().clock ();
 
     /* Now these variables will be reset
        - Debojyoti Dutta 12th Oct'2000 */
@@ -616,32 +792,36 @@ TcpAgent::reset()
     necnresponses_ = 0;
     ncwndcuts_ = 0;
     ncwndcuts1_ = 0;
-    cancel_timers();      // suggested by P. Anelli.
+    cancel_timers ();		// suggested by P. Anelli.
 
-    if (control_increase_) {
-        prev_highest_ack_ = highest_ack_ ;
+    if (control_increase_)
+    {
+        prev_highest_ack_ = highest_ack_;
     }
 
-    if (wnd_option_ == 8) {
+    if (wnd_option_ == 8)
+    {
         // HighSpeed TCP
-        hstcp_.low_p = 1.5/(low_window_*low_window_);
-        double highLowWin = log(high_window_)-log(low_window_);
-        double highLowP = log(high_p_) - log(hstcp_.low_p);
+        hstcp_.low_p = 1.5 / (low_window_ * low_window_);
+        double highLowWin = log (high_window_) - log (low_window_);
+        double highLowP = log (high_p_) - log (hstcp_.low_p);
         hstcp_.dec1 =
-            0.5 - log(low_window_) * (high_decrease_ - 0.5)/highLowWin;
-        hstcp_.dec2 = (high_decrease_ - 0.5)/highLowWin;
+            0.5 - log (low_window_) * (high_decrease_ - 0.5) / highLowWin;
+        hstcp_.dec2 = (high_decrease_ - 0.5) / highLowWin;
         hstcp_.p1 =
-            log(hstcp_.low_p) - log(low_window_) * highLowP/highLowWin;
-        hstcp_.p2 = highLowP/highLowWin;
+            log (hstcp_.low_p) - log (low_window_) * highLowP / highLowWin;
+        hstcp_.p2 = highLowP / highLowWin;
     }
 
-    if (QOption_) {
-        int now = (int)(Scheduler::instance().clock()/tcp_tick_ + 0.5);
-        T_last = now ;
-        T_prev = now ;
-        W_used = 0 ;
-        if (EnblRTTCtr_) {
-            reset_qoption();
+    if (QOption_)
+    {
+        int now = (int) (Scheduler::instance ().clock () / tcp_tick_ + 0.5);
+        T_last = now;
+        T_prev = now;
+        W_used = 0;
+        if (EnblRTTCtr_)
+        {
+            reset_qoption ();
         }
     }
 }
@@ -649,26 +829,31 @@ TcpAgent::reset()
 /*
  * Initialize variables for the retransmit timer.
  */
-void TcpAgent::rtt_init()
+    void
+TcpAgent::rtt_init ()
 {
     t_rtt_ = 0;
-    t_srtt_ = int(srtt_init_ / tcp_tick_) << T_SRTT_BITS;
-    t_rttvar_ = int(rttvar_init_ / tcp_tick_) << T_RTTVAR_BITS;
+    t_srtt_ = int (srtt_init_ / tcp_tick_) << T_SRTT_BITS;
+    t_rttvar_ = int (rttvar_init_ / tcp_tick_) << T_RTTVAR_BITS;
     t_rtxcur_ = rtxcur_init_;
     t_backoff_ = 1;
 }
 
-double TcpAgent::rtt_timeout()
+    double
+TcpAgent::rtt_timeout ()
 {
     double timeout;
-    if (rfc2988_) {
+    if (rfc2988_)
+    {
         // Correction from Tom Kelly to be RFC2988-compliant, by
         // clamping minrto_ before applying t_backoff_.
         if (t_rtxcur_ < minrto_ && !use_rtt_)
             timeout = minrto_ * t_backoff_;
         else
             timeout = t_rtxcur_ * t_backoff_;
-    } else {
+    }
+    else
+    {
         // only of interest for backwards compatibility
         timeout = t_rtxcur_ * t_backoff_;
         if (timeout < minrto_)
@@ -678,12 +863,14 @@ double TcpAgent::rtt_timeout()
     if (timeout > maxrto_)
         timeout = maxrto_;
 
-    if (timeout < 2.0 * tcp_tick_) {
-        if (timeout < 0) {
-            fprintf(stderr, "TcpAgent: negative RTO!  (%f)\n",
-                    timeout);
-            exit(1);
-        } else if (use_rtt_ && timeout < tcp_tick_)
+    if (timeout < 2.0 * tcp_tick_)
+    {
+        if (timeout < 0)
+        {
+            fprintf (stderr, "TcpAgent: negative RTO!  (%f)\n", timeout);
+            exit (1);
+        }
+        else if (use_rtt_ && timeout < tcp_tick_)
             timeout = tcp_tick_;
         else
             timeout = 2.0 * tcp_tick_;
@@ -694,16 +881,20 @@ double TcpAgent::rtt_timeout()
 
 
 /* This has been modified to use the tahoe code. */
-void TcpAgent::rtt_update(double tao)
+    void
+TcpAgent::rtt_update (double tao)
 {
-    double now = Scheduler::instance().clock();
+    double now = Scheduler::instance ().clock ();
     if (ts_option_)
-        t_rtt_ = int(tao /tcp_tick_ + 0.5);
-    else {
+    {
+        t_rtt_ = int (tao / tcp_tick_ + 0.5);
+    }
+    else
+    {
         double sendtime = now - tao;
         sendtime += boot_time_;
-        double tickoff = fmod(sendtime, tcp_tick_);
-        t_rtt_ = int((tao + tickoff) / tcp_tick_);
+        double tickoff = fmod (sendtime, tcp_tick_);
+        t_rtt_ = int ((tao + tickoff) / tcp_tick_);
     }
     if (t_rtt_ < 1)
         t_rtt_ = 1;
@@ -715,19 +906,22 @@ void TcpAgent::rtt_update(double tao)
     // Similarly, "t_rttvar_ >> T_RTTVAR_BITS" is the actual rttvar,
     //   and "t_rttvar_" is 4*rttvar.
     //
-    if (t_srtt_ != 0) {
+    if (t_srtt_ != 0)
+    {
         register short delta;
-        delta = t_rtt_ - (t_srtt_ >> T_SRTT_BITS);  // d = (m - a0)
-        if ((t_srtt_ += delta) <= 0)    // a1 = 7/8 a0 + 1/8 m
+        delta = t_rtt_ - (t_srtt_ >> T_SRTT_BITS);	// d = (m - a0)
+        if ((t_srtt_ += delta) <= 0)	// a1 = 7/8 a0 + 1/8 m
             t_srtt_ = 1;
         if (delta < 0)
             delta = -delta;
         delta -= (t_rttvar_ >> T_RTTVAR_BITS);
-        if ((t_rttvar_ += delta) <= 0)  // var1 = 3/4 var0 + 1/4 |d|
+        if ((t_rttvar_ += delta) <= 0)	// var1 = 3/4 var0 + 1/4 |d|
             t_rttvar_ = 1;
-    } else {
-        t_srtt_ = t_rtt_ << T_SRTT_BITS;        // srtt = rtt
-        t_rttvar_ = t_rtt_ << (T_RTTVAR_BITS-1);    // rttvar = rtt / 2
+    }
+    else
+    {
+        t_srtt_ = t_rtt_ << T_SRTT_BITS;	// srtt = rtt
+        t_rttvar_ = t_rtt_ << (T_RTTVAR_BITS - 1);	// rttvar = rtt / 2
     }
     //
     // Current retransmit value is
@@ -735,19 +929,21 @@ void TcpAgent::rtt_update(double tao)
     //    plus 2^rttvar_exp_ times (unscaled) rttvar.
     //
     t_rtxcur_ = (((t_rttvar_ << (rttvar_exp_ + (T_SRTT_BITS - T_RTTVAR_BITS))) +
-                t_srtt_)  >> T_SRTT_BITS ) * tcp_tick_;
+                t_srtt_) >> T_SRTT_BITS) * tcp_tick_;
 
     return;
 }
 
-void TcpAgent::rtt_backoff()
+    void
+TcpAgent::rtt_backoff ()
 {
-    if (t_backoff_ < 64 || (rfc2988_ && rtt_timeout() < maxrto_))
+    if (t_backoff_ < 64 || (rfc2988_ && rtt_timeout () < maxrto_))
         t_backoff_ <<= 1;
     // RFC2988 allows a maximum for the backed-off RTO of 60 seconds.
     // This is applied by maxrto_.
 
-    if (t_backoff_ > 8) {
+    if (t_backoff_ > 8)
+    {
         /*
          * If backed off this far, clobber the srtt
          * value, storing it in the mean deviation
@@ -763,108 +959,126 @@ void TcpAgent::rtt_backoff()
  *      how big is an IP+TCP header in bytes; include options such as ts
  * this function should be virtual so others (e.g. SACK) can override
  */
-int TcpAgent::headersize()
+    int
+TcpAgent::headersize ()
 {
     int total = tcpip_base_hdr_size_;
-    if (total < 1) {
-        fprintf(stderr,
+    if (total < 1)
+    {
+        fprintf (stderr,
                 "TcpAgent(%s): warning: tcpip hdr size is only %d bytes\n",
-                name(), tcpip_base_hdr_size_);
+                name (), tcpip_base_hdr_size_);
     }
     if (ts_option_)
         total += ts_option_size_;
     return (total);
 }
 
-void TcpAgent::output(int seqno, int reason)
+    void
+TcpAgent::output (int seqno, int reason)
 {
     int force_set_rtx_timer = 0;
-    Packet* p = allocpkt();
-    hdr_tcp *tcph = hdr_tcp::access(p);
-    hdr_flags* hf = hdr_flags::access(p);
-    hdr_ip *iph = hdr_ip::access(p);
-    int databytes = hdr_cmn::access(p)->size();
-    tcph->seqno() = seqno;
-    tcph->ts() = Scheduler::instance().clock();
+    Packet *p = allocpkt ();
+    hdr_tcp *tcph = hdr_tcp::access (p);
+    hdr_flags *hf = hdr_flags::access (p);
+    hdr_ip *iph = hdr_ip::access (p);
+    int databytes = hdr_cmn::access (p)->size ();
+    tcph->seqno () = seqno;
+    tcph->ts () = Scheduler::instance ().clock ();
     int is_retransmit = (seqno < maxseq_);
 
     // Mark packet for diagnosis purposes if we are in Quick-Start Phase
-    if (qs_approved_) {
-        hf->qs() = 1;
+    if (qs_approved_)
+    {
+        hf->qs () = 1;
     }
 
     // store timestamps, with bugfix_ts_.  From Andrei Gurtov.
     // (A real TCP would use scoreboard for this.)
-    if (bugfix_ts_ && tss==NULL) {
-        tss = (double*) calloc(tss_size_, sizeof(double));
-        if (tss==NULL) exit(1);
+    if (bugfix_ts_ && tss == NULL)
+    {
+        tss = (double *) calloc (tss_size_, sizeof (double));
+        if (tss == NULL)
+            exit (1);
     }
     //dynamically grow the timestamp array if it's getting full
-    if (bugfix_ts_ && ((seqno - highest_ack_) > tss_size_* 0.9)) {
+    if (bugfix_ts_ && ((seqno - highest_ack_) > tss_size_ * 0.9))
+    {
         double *ntss;
-        ntss = (double*) calloc(tss_size_*2, sizeof(double));
-        printf("%p resizing timestamp table\n", this);
-        if (ntss == NULL) exit(1);
-        for (int i=0; i<tss_size_; i++)
+        ntss = (double *) calloc (tss_size_ * 2, sizeof (double));
+        printf ("%p resizing timestamp table\n", this);
+        if (ntss == NULL)
+            exit (1);
+        for (int i = 0; i < tss_size_; i++)
             ntss[(highest_ack_ + i) % (tss_size_ * 2)] =
                 tss[(highest_ack_ + i) % tss_size_];
-        free(tss);
+        free (tss);
         tss_size_ *= 2;
         tss = ntss;
     }
 
-    if (tss!=NULL)
-        tss[seqno % tss_size_] = tcph->ts();
+    if (tss != NULL)
+        tss[seqno % tss_size_] = tcph->ts ();
 
-    tcph->ts_echo() = ts_peer_;
-    tcph->reason() = reason;
-    tcph->last_rtt() = int(int(t_rtt_)*tcp_tick_*1000);
+    tcph->ts_echo () = ts_peer_;
+    tcph->reason () = reason;
+    tcph->last_rtt () = int (int (t_rtt_) * tcp_tick_ * 1000);
 
-    if (ecn_) {
-        hf->ect() = 1;  // ECN-capable transport
+    if (ecn_)
+    {
+        hf->ect () = 1;		// ECN-capable transport
     }
-    if (cong_action_ && (!is_retransmit || SetCWRonRetransmit_)) {
-        hf->cong_action() = TRUE;  // Congestion action.
+    if (cong_action_ && (!is_retransmit || SetCWRonRetransmit_))
+    {
+        hf->cong_action () = TRUE;	// Congestion action.
         cong_action_ = FALSE;
     }
     /* Check if this is the initial SYN packet. */
-    if (seqno == 0) {
-        if (syn_) {
+    if (seqno == 0)
+    {
+        if (syn_)
+        {
             databytes = 0;
-            if (maxseq_ == -1) {
-                curseq_ += 1; /*increment only on initial SYN*/
+            if (maxseq_ == -1)
+            {
+                curseq_ += 1;	/*increment only on initial SYN */
             }
-            hdr_cmn::access(p)->size() = tcpip_base_hdr_size_;
+            hdr_cmn::access (p)->size () = tcpip_base_hdr_size_;
             ++syn_connects_;
             //fprintf(stderr, "TCPAgent: syn_connects_ %d max_connects_ %d\n",
             //  syn_connects_, max_connects_);
-            if (max_connects_ > 0 &&
-                    syn_connects_ > max_connects_) {
+            if (max_connects_ > 0 && syn_connects_ > max_connects_)
+            {
                 // Abort the connection.
                 // What is the best way to abort the connection?
                 curseq_ = 0;
-                rtx_timer_.resched(10000);
+                rtx_timer_.resched (10000);
                 return;
             }
         }
-        if (ecn_) {
-            hf->ecnecho() = 1;
+        if (ecn_)
+        {
+            hf->ecnecho () = 1;
             //          hf->cong_action() = 1;
-            hf->ect() = 0;
+            hf->ect () = 0;
         }
-        if (qs_enabled_) {
-            hdr_qs *qsh = hdr_qs::access(p);
+        if (qs_enabled_)
+        {
+            hdr_qs *qsh = hdr_qs::access (p);
 
             // dataout is kilobytes queued for sending
-            int dataout = (curseq_ - maxseq_ - 1) * (size_ + headersize()) / 1024;
+            int dataout =
+                (curseq_ - maxseq_ - 1) * (size_ + headersize ()) / 1024;
             int qs_rr = rate_request_;
-            if (qs_request_mode_ == 1 && qs_rtt_ > 0) {
+            if (qs_request_mode_ == 1 && qs_rtt_ > 0)
+            {
                 // PS: Avoid making unnecessary QS requests
                 // use a rough estimation of RTT in qs_rtt_
                 // to calculate the desired rate from dataout.
                 // printf("dataout %d qs_rr %d qs_rtt_ %d\n",
                 //  dataout, qs_rr, qs_rtt_);
-                if (dataout * 1000 / qs_rtt_ < qs_rr) {
+                if (dataout * 1000 / qs_rtt_ < qs_rr)
+                {
                     qs_rr = dataout * 1000 / qs_rtt_;
                 }
                 // printf("request %d\n", qs_rr);
@@ -872,58 +1086,68 @@ void TcpAgent::output(int seqno, int reason)
                 // segments needed to activate QS request
                 // printf("curseq_ %d maxseq_ %d qs_thresh_ %d\n",
                 //   int(curseq_), int(maxseq_), qs_thresh_);
-                if ((curseq_ - maxseq_ - 1) < qs_thresh_) {
+                if ((curseq_ - maxseq_ - 1) < qs_thresh_)
+                {
                     qs_rr = 0;
                 }
             }
 
-            if (qs_rr > 0) {
+            if (qs_rr > 0)
+            {
                 if (print_request_)
-                    printf("QS request (before encoding): %d KBps\n", qs_rr);
+                    printf ("QS request (before encoding): %d KBps\n", qs_rr);
                 // QuickStart code from Srikanth Sundarrajan.
-                qsh->flag() = QS_REQUEST;
-                qsh->ttl() = Random::integer(256);
-                ttl_diff_ = (iph->ttl() - qsh->ttl()) % 256;
-                qsh->rate() = hdr_qs::Bps_to_rate(qs_rr * 1024);
+                qsh->flag () = QS_REQUEST;
+                qsh->ttl () = Random::integer (256);
+                ttl_diff_ = (iph->ttl () - qsh->ttl ()) % 256;
+                qsh->rate () = hdr_qs::Bps_to_rate (qs_rr * 1024);
                 qs_requested_ = 1;
-            } else {
-                qsh->flag() = QS_DISABLE;
+            }
+            else
+            {
+                qsh->flag () = QS_DISABLE;
             }
         }
     }
-    else if (useHeaders_ == true) {
-        hdr_cmn::access(p)->size() += headersize();
+    else if (useHeaders_ == true)
+    {
+        hdr_cmn::access (p)->size () += headersize ();
     }
-    hdr_cmn::access(p)->size();
+    hdr_cmn::access (p)->size ();
 
     /* if no outstanding data, be sure to set rtx timer again */
     if (highest_ack_ == maxseq_)
         force_set_rtx_timer = 1;
     /* call helper function to fill in additional fields */
-    output_helper(p);
+    output_helper (p);
 
     ++ndatapack_;
     ndatabytes_ += databytes;
-    send(p, 0);
+    send (p, 0);
     if (seqno == curseq_ && seqno > maxseq_)
-        idle();  // Tell application I have sent everything so far
-    if (seqno > maxseq_) {
+        idle ();			// Tell application I have sent everything so far
+    if (seqno > maxseq_)
+    {
         maxseq_ = seqno;
-        if (!rtt_active_) {
+        if (!rtt_active_)
+        {
             rtt_active_ = 1;
-            if (seqno > rtt_seq_) {
+            if (seqno > rtt_seq_)
+            {
                 rtt_seq_ = seqno;
-                rtt_ts_ = Scheduler::instance().clock();
+                rtt_ts_ = Scheduler::instance ().clock ();
             }
 
         }
-    } else {
+    }
+    else
+    {
         ++nrexmitpack_;
         nrexmitbytes_ += databytes;
     }
-    if (!(rtx_timer_.status() == TIMER_PENDING) || force_set_rtx_timer)
+    if (!(rtx_timer_.status () == TIMER_PENDING) || force_set_rtx_timer)
         /* No timer pending.  Schedule one. */
-        set_rtx_timer();
+        set_rtx_timer ();
 }
 
 /*
@@ -931,33 +1155,39 @@ void TcpAgent::output(int seqno, int reason)
  * If nbytes == -1, this corresponds to infinite send.  We approximate
  * infinite by a very large number (TCP_MAXSEQ).
  */
-void TcpAgent::sendmsg(int nbytes, const char* /*flags*/)
+    void
+TcpAgent::sendmsg (int nbytes, const char * /*flags */ )
 {
     if (nbytes == -1 && curseq_ <= TCP_MAXSEQ)
         curseq_ = TCP_MAXSEQ;
     else
-        curseq_ += (nbytes/size_ + (nbytes%size_ ? 1 : 0));
-    send_much(0, 0, maxburst_);
+        curseq_ += (nbytes / size_ + (nbytes % size_ ? 1 : 0));
+    send_much (0, 0, maxburst_);
 }
 
-void TcpAgent::advanceby(int delta)
+    void
+TcpAgent::advanceby (int delta)
 {
     curseq_ += delta;
     if (delta > 0)
         closed_ = 0;
-    send_much(0, 0, maxburst_);
+    send_much (0, 0, maxburst_);
 }
 
-void TcpAgent::increment2(int n) {
+    void
+TcpAgent::increment2 (int n)
+{
 
-    GlobalQueue* temp = global_q_head;
-    int i=0;
-    while(i!=n){
-        temp=temp->next;
+    GlobalQueue *temp = global_q_head;
+    int i = 0;
+    while (i != n)
+    {
+        temp = temp->next;
         i++;
     }
-    temp->que->incrementFlows();
+    temp->que->incrementFlows ();
 }
+
 // void TcpAgent::incrementFlows() {
 //     Node *me = Node::get_node_by_address(addr());
 
@@ -972,49 +1202,64 @@ void TcpAgent::increment2(int n) {
 //     }
 // }
 
-void TcpAgent::incrementFlows() {
+    void
+TcpAgent::incrementFlows ()
+{
 
-    Node *me = Node::get_node_by_address(addr());
-    Flow_path* fp = flow_path;
-    if (fp==NULL)
-        cout<<"FUCK ME"<<endl;
-    while(fp->next!=NULL){
+    Node *me = Node::get_node_by_address (addr ());
+    Flow_path *fp = flow_path;
+    if (fp == NULL)
+        cout << "FUCK ME" << endl;
+    while (fp->next != NULL)
+    {
 
-        for (int j = 0;j<me->topo_links.size();j++){
+        for (int j = 0; j < me->topo_links.size (); j++)
+        {
 
-            if (me->topo_links[j].n_start == fp->node && me->topo_links[j].n_end == fp->next->node){
-                increment2(me->topo_links[j].link_num);
+            if (me->topo_links[j].n_start == fp->node
+                    && me->topo_links[j].n_end == fp->next->node)
+            {
+                increment2 (me->topo_links[j].link_num);
             }
         }
-        fp=fp->next;
+        fp = fp->next;
     }
 }
 
-void TcpAgent::decrementFlows() {
-    Node *me = Node::get_node_by_address(addr());
-    Flow_path* fp = flow_path;
-    while(fp->next!=NULL){
+    void
+TcpAgent::decrementFlows ()
+{
+    Node *me = Node::get_node_by_address (addr ());
+    Flow_path *fp = flow_path;
+    while (fp->next != NULL)
+    {
 
-        for (int j = 0;j<me->topo_links.size();j++){
+        for (int j = 0; j < me->topo_links.size (); j++)
+        {
 
-            if (me->topo_links[j].n_start == fp->node && me->topo_links[j].n_end == fp->next->node){
-                decrement2(me->topo_links[j].link_num);
+            if (me->topo_links[j].n_start == fp->node
+                    && me->topo_links[j].n_end == fp->next->node)
+            {
+                decrement2 (me->topo_links[j].link_num);
             }
         }
-        fp=fp->next;
+        fp = fp->next;
     }
 }
 
 
-void TcpAgent::decrement2(int n) {
+    void
+TcpAgent::decrement2 (int n)
+{
 
-    GlobalQueue* temp = global_q_head;
-    int i=0;
-    while(i!=n){
-        temp=temp->next;
+    GlobalQueue *temp = global_q_head;
+    int i = 0;
+    while (i != n)
+    {
+        temp = temp->next;
         i++;
     }
-    temp->que->decrementFlows();
+    temp->que->decrementFlows ();
 }
 
 // void TcpAgent::decrementFlows() {
@@ -1034,68 +1279,81 @@ void TcpAgent::decrement2(int n) {
 
 
 
-int TcpAgent::command(int argc, const char*const* argv)
+    int
+TcpAgent::command (int argc, const char *const *argv)
 {
-    if (argc == 2) {
-        if (strcmp(argv[1], "flow_start") == 0) {
+    if (argc == 2)
+    {
+        if (strcmp (argv[1], "flow_start") == 0)
+        {
             // updatePath() //increment number of flows at switches in the path
-            print_pathway();
+            print_pathway ();
             // if (flow_path == NULL)
             //     install_path();
             //cout<<"IN FLOW START FUNCTION"<<endl;
-            incrementFlows();
-            if(DHT12){
-                init_DHT(1);
+            incrementFlows ();
+            if (DHT12)
+            {
+                init_DHT (1);
             }
-            Event* e;
-            expire(e);
+            Event *e;
+            expire (e);
             return (TCL_OK);
         }
-        if (strcmp(argv[1], "flow_end") == 0){
+        if (strcmp (argv[1], "flow_end") == 0)
+        {
             // Node *me = Node::get_node_by_address(addr());
             // me->num_flow--;
             cwnd_ = 0;
-            decrementFlows();
-            if (DHT12){
-                init_DHT(0);
+            decrementFlows ();
+            if (DHT12)
+            {
+                init_DHT (0);
             }
             poll_off = 1;
             return (TCL_OK);
         }
 
-        if (strcmp(argv[1], "tcp_send") == 0) {
-            printf("detected tcp_send\n");
-            send_one_packet();
+        if (strcmp (argv[1], "tcp_send") == 0)
+        {
+            printf ("detected tcp_send\n");
+            send_one_packet ();
             return (TCL_OK);
         }
-        if (strcmp(argv[1], "PATH") == 0) {
-            printf("detected tcp::print_pathway\n");
-            print_pathway();
+        if (strcmp (argv[1], "PATH") == 0)
+        {
+            printf ("detected tcp::print_pathway\n");
+            print_pathway ();
             return (TCL_OK);
         }
-        if (strcmp(argv[1], "print_pathway") == 0) {
-            printf("detected tcp::print_pathway\n");
-            print_pathway();
+        if (strcmp (argv[1], "print_pathway") == 0)
+        {
+            printf ("detected tcp::print_pathway\n");
+            print_pathway ();
             return (TCL_OK);
         }
 
     }
-    if (argc == 3) {
+    if (argc == 3)
+    {
 
-        if (strcmp(argv[1], "advance") == 0) {
-            int newseq = atoi(argv[2]);
+        if (strcmp (argv[1], "advance") == 0)
+        {
+            int newseq = atoi (argv[2]);
             if (newseq > maxseq_)
-                advanceby(newseq - curseq_);
+                advanceby (newseq - curseq_);
             else
-                advanceby(maxseq_ - curseq_);
+                advanceby (maxseq_ - curseq_);
             return (TCL_OK);
         }
-        if (strcmp(argv[1], "advanceby") == 0) {
-            advanceby(atoi(argv[2]));
+        if (strcmp (argv[1], "advanceby") == 0)
+        {
+            advanceby (atoi (argv[2]));
             return (TCL_OK);
         }
-        if (strcmp(argv[1], "eventtrace") == 0) {
-            et_ = (EventTrace *)TclObject::lookup(argv[2]);
+        if (strcmp (argv[1], "eventtrace") == 0)
+        {
+            et_ = (EventTrace *) TclObject::lookup (argv[2]);
             return (TCL_OK);
         }
         /*
@@ -1122,10 +1380,10 @@ int TcpAgent::command(int argc, const char*const* argv)
          * what other systems do the same.
          *
          */
-        if (strcmp(argv[1], "persist") == 0) {
-            TcpAgent *other
-                = (TcpAgent*)TclObject::lookup(argv[2]);
-            cwnd_ = cwnd_; // CCLB CHANGE MADE cwnd_ = other->cwnd_;
+        if (strcmp (argv[1], "persist") == 0)
+        {
+            TcpAgent *other = (TcpAgent *) TclObject::lookup (argv[2]);
+            cwnd_ = cwnd_;	// CCLB CHANGE MADE cwnd_ = other->cwnd_;
             awnd_ = other->awnd_;
             ssthresh_ = other->ssthresh_;
             t_rtt_ = other->t_rtt_;
@@ -1135,17 +1393,18 @@ int TcpAgent::command(int argc, const char*const* argv)
             return (TCL_OK);
         }
     }
-    return (Agent::command(argc, argv));
+    return (Agent::command (argc, argv));
 }
 
 
-void TcpAgent::send_one_packet()
+    void
+TcpAgent::send_one_packet ()
 {
-    printf("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
+    printf ("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
     // send packet with 0 seqno and 0 reason
-    printf("sending packet\n");
-    output(0,0);
-    printf("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
+    printf ("sending packet\n");
+    output (0, 0);
+    printf ("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
     return;
 }
 
@@ -1153,34 +1412,50 @@ void TcpAgent::send_one_packet()
 /** CUSTOM FUNCTON
  * prints the pathways in the gloabal pathway object
  */
-void TcpAgent::print_pathway() {
-    printf("----------------------------------------------------------\n");
-    printf("tcp::print pathway called.\n");
-    if(pathway_global) {
-        char* key = concat_(here_.addr_,here_.port_,dst_.addr_,dst_.port_);
-        for (std::map<char*, pathway_flow*>::iterator it=pathway_global->flow_map.begin(); it!=pathway_global->flow_map.end(); ++it) {
+    void
+TcpAgent::print_pathway ()
+{
+    printf ("----------------------------------------------------------\n");
+    printf ("------------- TCPAgent::print pathway called -------------\n");
+    printf ("----------------------------------------------------------\n");
 
-            if (compare_strings_(key,it->first)){
+    if (pathway_global)
+    {
+        char *key = concat_ (here_.addr_, here_.port_, dst_.addr_, dst_.port_);
+        for (std::map < char *, pathway_flow * >::iterator it =
+                pathway_global->flow_map.begin ();
+                it != pathway_global->flow_map.end (); ++it)
+        {
 
-                if (it->first) {
-                    if(it->second){
-                        pathway_link* link_head = it->second->links;
-                        printf("link_ids::\n");
-                        while (link_head){
-                            //                            printf(" %d,",link_head->link_id);
-                            install_path(link_head->link_id);
+            if (compare_strings_ (key, it->first))
+            {
+
+                if (it->first)
+                {
+                    if (it->second)
+                    {
+                        pathway_link *link_head = it->second->links;
+                        printf ("link_ids::\n");
+                        while (link_head)
+                        {
+                            // printf(" %d,",link_head->link_id);
+                            install_path (link_head->link_id);
                             link_head = link_head->next;
                         }
 
-                        printf("\n");
+                        printf ("\n");
                     }
                 }
             }
         }
-    } else {
-        printf("pathway global is NULl\n");
     }
-    printf("-----------------------------------------------------------XXXXXXXXXXXXXXXXXx\n");
+    else
+    {
+        printf ("pathway global is NULl\n");
+    }
+    printf("-----------------------------------------------------------\n");
+    printf("----------------------PRINT END----------------------------\n");
+    printf("-----------------------------------------------------------\n");
     return;
 }
 
@@ -1188,12 +1463,14 @@ void TcpAgent::print_pathway() {
  * Returns the window size adjusted to allow <num> segments past recovery
  * point to be transmitted on next ack.
  */
-int TcpAgent::force_wnd(int num)
+    int
+TcpAgent::force_wnd (int num)
 {
-    return recover_ + num - (int)highest_ack_;
+    return recover_ + num - (int) highest_ack_;
 }
 
-int TcpAgent::window()
+    int
+TcpAgent::window ()
 {
     /*
      * If F-RTO is enabled and first ack has come in, temporarily open
@@ -1201,67 +1478,79 @@ int TcpAgent::window()
      * The F-RTO code is from Pasi Sarolahti.  F-RTO is an algorithm
      * for detecting spurious retransmission timeouts.
      */
-    if (frto_ == 2) {
-        return (force_wnd(2) < wnd_ ?
-                force_wnd(2) : (int)wnd_);
-    } else {
-        return (cwnd_ < wnd_ ? (int)cwnd_ : (int)wnd_);
+    if (frto_ == 2)
+    {
+        return (force_wnd (2) < wnd_ ? force_wnd (2) : (int) wnd_);
+    }
+    else
+    {
+        return (cwnd_ < wnd_ ? (int) cwnd_ : (int) wnd_);
     }
 }
 
-double TcpAgent::windowd()
+    double
+TcpAgent::windowd ()
 {
-    return (cwnd_ < wnd_ ? (double)cwnd_ : (double)wnd_);
+    return (cwnd_ < wnd_ ? (double) cwnd_ : (double) wnd_);
 }
 
 /*
  * Try to send as much data as the window will allow.  The link layer will
  * do the buffering; we ask the application layer for the size of the packets.
  */
-void TcpAgent::send_much(int force, int reason, int maxburst)
+    void
+TcpAgent::send_much (int force, int reason, int maxburst)
 {
-    send_idle_helper();
-    int win = window();
+    send_idle_helper ();
+    int win = window ();
     int npackets = 0;
 
-    if (!force && delsnd_timer_.status() == TIMER_PENDING)
+    if (!force && delsnd_timer_.status () == TIMER_PENDING)
         return;
     /* Save time when first packet was sent, for newreno  --Allman */
     if (t_seqno_ == 0)
-        firstsent_ = Scheduler::instance().clock();
+        firstsent_ = Scheduler::instance ().clock ();
 
-    if (burstsnd_timer_.status() == TIMER_PENDING)
+    if (burstsnd_timer_.status () == TIMER_PENDING)
         return;
-    while (t_seqno_ <= highest_ack_ + win && t_seqno_ < curseq_) {
-        if (overhead_ == 0 || force || qs_approved_) {
-            output(t_seqno_, reason);
+    while (t_seqno_ <= highest_ack_ + win && t_seqno_ < curseq_)
+    {
+        if (overhead_ == 0 || force || qs_approved_)
+        {
+            output (t_seqno_, reason);
             npackets++;
             if (QOption_)
-                process_qoption_after_send () ;
-            t_seqno_ ++ ;
-            if (qs_approved_ == 1) {
+                process_qoption_after_send ();
+            t_seqno_++;
+            if (qs_approved_ == 1)
+            {
                 // delay = effective RTT / window
                 double delay = (double) t_rtt_ * tcp_tick_ / win;
-                if (overhead_) {
-                    delsnd_timer_.resched(delay + Random::uniform(overhead_));
-                } else {
-                    delsnd_timer_.resched(delay);
+                if (overhead_)
+                {
+                    delsnd_timer_.resched (delay + Random::uniform (overhead_));
+                }
+                else
+                {
+                    delsnd_timer_.resched (delay);
                 }
                 return;
             }
-        } else if (!(delsnd_timer_.status() == TIMER_PENDING)) {
+        }
+        else if (!(delsnd_timer_.status () == TIMER_PENDING))
+        {
             /*
              * Set a delayed send timeout.
              */
-            delsnd_timer_.resched(Random::uniform(overhead_));
+            delsnd_timer_.resched (Random::uniform (overhead_));
             return;
         }
-        win = window();
+        win = window ();
         if (maxburst && npackets == maxburst)
             break;
     }
     /* call helper function */
-    send_helper(maxburst);
+    send_helper (maxburst);
 }
 
 /*
@@ -1270,11 +1559,12 @@ void TcpAgent::send_much(int force, int reason, int maxburst)
  * "mild" is 0 for timeouts and Tahoe dup acks, 1 for Reno dup acks.
  * "backoff" is 1 if the timer should be backed off, 0 otherwise.
  */
-void TcpAgent::reset_rtx_timer(int mild, int backoff)
+    void
+TcpAgent::reset_rtx_timer (int mild, int backoff)
 {
     if (backoff)
-        rtt_backoff();
-    set_rtx_timer();
+        rtt_backoff ();
+    set_rtx_timer ();
     if (!mild)
         t_seqno_ = highest_ack_ + 1;
     rtt_active_ = 0;
@@ -1284,9 +1574,10 @@ void TcpAgent::reset_rtx_timer(int mild, int backoff)
  * Set retransmit timer using current rtt estimate.  By calling resched(),
  * it does not matter whether the timer was already running.
  */
-void TcpAgent::set_rtx_timer()
+    void
+TcpAgent::set_rtx_timer ()
 {
-    rtx_timer_.resched(rtt_timeout());
+    rtx_timer_.resched (rtt_timeout ());
 }
 
 /*
@@ -1295,9 +1586,10 @@ void TcpAgent::set_rtx_timer()
  * cwnd is less than one (as when the ECN bit is set when cwnd was 1).
  * Otherwise, if a timer is still outstanding, cancel it.
  */
-void TcpAgent::newtimer(Packet* pkt)
+    void
+TcpAgent::newtimer (Packet * pkt)
 {
-    hdr_tcp *tcph = hdr_tcp::access(pkt);
+    hdr_tcp *tcph = hdr_tcp::access (pkt);
     /*
      * t_seqno_, the next packet to send, is reset (decreased)
      *   to highest_ack_ + 1 after a timeout,
@@ -1308,20 +1600,21 @@ void TcpAgent::newtimer(Packet* pkt)
      *   packet until the retransmit timer again expires.
      *   So we have to check for "cwnd_ < 1" as well.
      */
-    if (t_seqno_ > tcph->seqno() || tcph->seqno() < maxseq_ || cwnd_ < 1)
-        set_rtx_timer();
+    if (t_seqno_ > tcph->seqno () || tcph->seqno () < maxseq_ || cwnd_ < 1)
+        set_rtx_timer ();
     else
-        cancel_rtx_timer();
+        cancel_rtx_timer ();
 }
 
 /*
  * for experimental, high-speed TCP
  */
-double TcpAgent::linear(double x, double x_1, double y_1, double x_2, double y_2)
+    double
+TcpAgent::linear (double x, double x_1, double y_1, double x_2, double y_2)
 {
     // The y coordinate factor ranges from y_1 to y_2
     //  as the x coordinate ranges from x_1 to x_2.
-    double y = y_1 + ((y_2 - y_1) * ((x - x_1)/(x_2-x_1)));
+    double y = y_1 + ((y_2 - y_1) * ((x - x_1) / (x_2 - x_1)));
     return y;
 }
 
@@ -1329,19 +1622,27 @@ double TcpAgent::linear(double x, double x_1, double y_1, double x_2, double y_2
  * Limited Slow-Start for large congestion windows.
  * This should only be called when max_ssthresh_ is non-zero.
  */
-double TcpAgent::limited_slow_start(double cwnd, int max_ssthresh, double increment)
+    double
+TcpAgent::limited_slow_start (double cwnd, int max_ssthresh, double increment)
 {
-    if (max_ssthresh <= 0) {
+    if (max_ssthresh <= 0)
+    {
         return increment;
-    } else {
+    }
+    else
+    {
         double increment1 = 0.0;
-        int round = int(cwnd / (double(max_ssthresh)/2.0));
-        if (round > 0) {
-            increment1 = 1.0/double(round);
+        int round = int (cwnd / (double (max_ssthresh) / 2.0));
+        if (round > 0)
+        {
+            increment1 = 1.0 / double (round);
         }
-        if (increment < increment1) {
+        if (increment < increment1)
+        {
             return increment1;
-        } else {
+        }
+        else
+        {
             return increment;
         }
     }
@@ -1350,12 +1651,16 @@ double TcpAgent::limited_slow_start(double cwnd, int max_ssthresh, double increm
 /*
  * For retrieving numdupacks_.
  */
-int TcpAgent::numdupacks(double cwnd)
+    int
+TcpAgent::numdupacks (double cwnd)
 {
-    int cwndfraction = (int) cwnd/numdupacksFrac_;
-    if (numdupacks_ > cwndfraction) {
+    int cwndfraction = (int) cwnd / numdupacksFrac_;
+    if (numdupacks_ > cwndfraction)
+    {
         return numdupacks_;
-    } else {
+    }
+    else
+    {
         return cwndfraction;
     }
 }
@@ -1363,13 +1668,14 @@ int TcpAgent::numdupacks(double cwnd)
 /*
  * Calculating the decrease parameter for highspeed TCP.
  */
-double TcpAgent::decrease_param()
+    double
+TcpAgent::decrease_param ()
 {
     double decrease;
     // OLD:
     // decrease = linear(log(cwnd_), log(low_window_), 0.5, log(high_window_), high_decrease_);
     // NEW (but equivalent):
-    decrease = hstcp_.dec1 + log(cwnd_) * hstcp_.dec2;
+    decrease = hstcp_.dec1 + log (cwnd_) * hstcp_.dec2;
     return decrease;
 }
 
@@ -1377,12 +1683,15 @@ double TcpAgent::decrease_param()
  * Calculating the increase parameter for highspeed TCP.
  */
 
-int TcpAgent::flow_count(){
-    Node *me = Node::get_node_by_address(addr());
+    int
+TcpAgent::flow_count ()
+{
+    Node *me = Node::get_node_by_address (addr ());
     return me->num_flow;
 }
 
-double TcpAgent::increase_param()
+    double
+TcpAgent::increase_param ()
 {
     double increase, decrease, p, answer;
     /* extending the slow-start for high-speed TCP */
@@ -1398,25 +1707,30 @@ double TcpAgent::increase_param()
     //   in a table, with the increase and decrease being a function of the
     //   congestion window.
 
-    if (cwnd_ <= low_window_) {
+    if (cwnd_ <= low_window_)
+    {
         answer = 1 / cwnd_;
         return answer;
-    } else if (cwnd_ >= hstcp_.cwnd_last_ &&
-            cwnd_ < hstcp_.cwnd_last_ + cwnd_range_) {
+    }
+    else if (cwnd_ >= hstcp_.cwnd_last_ &&
+            cwnd_ < hstcp_.cwnd_last_ + cwnd_range_)
+    {
         // cwnd_range_ can be set to 0 to be disabled,
         //  or can be set from 1 to 100
         answer = hstcp_.increase_last_ / cwnd_;
         return answer;
-    } else {
+    }
+    else
+    {
         // OLD:
         // p = exp(linear(log(cwnd_), log(low_window_), log(hstcp_.low_p), log(high_window_), log(high_p_)));
         // NEW, but equivalent:
-        p = exp(hstcp_.p1 + log(cwnd_) * hstcp_.p2);
-        decrease = decrease_param();
+        p = exp (hstcp_.p1 + log (cwnd_) * hstcp_.p2);
+        decrease = decrease_param ();
         // OLD:
         // increase = cwnd_*cwnd_*p *(2.0*decrease)/(2.0 - decrease);
         // NEW, but equivalent:
-        increase = cwnd_ * cwnd_ * p /(1/decrease - 0.5);
+        increase = cwnd_ * cwnd_ * p / (1 / decrease - 0.5);
         //  if (increase > max_increase) {
         //      increase = max_increase;
         //  }
@@ -1428,74 +1742,83 @@ double TcpAgent::increase_param()
 }
 
 
-double TcpAgent::getRate() {
-
-
-    GlobalAgent* myAgent = global_a_head;
-    Node *me = Node::get_node_by_address(addr());
-    myAgent->next->agent->send_c(2,0);
-
+    double
+TcpAgent::getRate ()
+{
+    GlobalAgent *myAgent = global_a_head;
+    Node *me = Node::get_node_by_address (addr ());
+    myAgent->next->agent->send_c (2, 0);
 
     //printf("MIDDLE \n");
-    myAgent->next->next->agent->send_c(2,2);
-    int nF1 = me->topo_links[0].stats.no_flows; // no of flows
+    myAgent->next->next->agent->send_c (2, 2);
+    int nF1 = me->topo_links[0].stats.no_flows;	// no of flows
     int nF2 = me->topo_links[2].stats.no_flows;
 
     // int nF1 = flow_count();
     // int nF2 = flow_count();
 
-    nF1==0?nF1=1:1==1;
-    nF2==0?nF2=1:1==1;
+    nF1 == 0 ? nF1 = 1 : 1 == 1;
+    nF2 == 0 ? nF2 = 1 : 1 == 1;
 
-    printf("nF1 = %d\n",nF1);
-    printf("nF2 = %d\n",nF2);
+    printf ("nF1 = %d\n", nF1);
+    printf ("nF2 = %d\n", nF2);
 
-    double r1 = 100*1*(1000000)/nF1;
-    double r2 = 100*1*(1000000)/nF2;
-    double myRate = min(r1,r2);
-    myRate = myRate * 0.6/1000;
-    myRate = myRate/1500;
-    printf("\n");
+    double r1 = 100 * 1 * (1000000) / nF1;
+    double r2 = 100 * 1 * (1000000) / nF2;
+    double myRate = min (r1, r2);
+    myRate = myRate * 0.6 / 1000;
+    myRate = myRate / 1500;
+    printf ("\n");
     return myRate;
 
 }
 
-void TcpAgent::expire (Event *e) {
+    void
+TcpAgent::expire (Event * e)
+{
 
     // polling function
     //printf("RAZA");
-    if (!poll_off){
+    if (!poll_off)
+    {
 
-        resched(POLL_RATE);
+        resched (POLL_RATE);
         //poll_round_robin();
         //every_link_poll();
         // poll_btnk_per();
-        poll_dht();
+        poll_dht ();
 
         if (poll_off == 1)
             cwnd_ = 0;
-
 
         //cout << "Going to Poll " << btnk->node << endl;
     }
 }
 
 
-void TcpAgent::update_edge(int start, int end){
+    void
+TcpAgent::update_edge (int start, int end)
+{
     //cout << "Hasnain Ali Pirzada " << endl;
-    GlobalQueue* gQ = global_q_head;
+    GlobalQueue *gQ = global_q_head;
     int link_num = -1;
-    Node *me = Node::get_node_by_address(addr());
-    for (int i=0;i<me->topo_links.size();i++){
-        if (me->topo_links[i].n_start == start && me->topo_links[i].n_end == end){
+    Node *me = Node::get_node_by_address (addr ());
+    for (int i = 0; i < me->topo_links.size (); i++)
+    {
+        if (me->topo_links[i].n_start == start
+                && me->topo_links[i].n_end == end)
+        {
             link_num = me->topo_links[i].link_num;
             break;
         }
     }
-    for (int i=0;i<link_num;i++) {
+    for (int i = 0; i < link_num; i++)
+    {
         gQ = gQ->next;
     }
-    me->topo_links[link_num].stats.setStats(gQ->que->cur_util_,gQ->que->qlim_,gQ->que->num_flows(),gQ->que->byteLength());
+    me->topo_links[link_num].stats.setStats (gQ->que->cur_util_, gQ->que->qlim_,
+            gQ->que->num_flows (),
+            gQ->que->byteLength ());
 
 }
 
@@ -1504,57 +1827,68 @@ void TcpAgent::update_edge(int start, int end){
 
 // call         update_edge(start,end); in the DHT function
 
-void TcpAgent::fetch_stats(int start, int end){
-    int my_num = addr();
-    if (start==my_num){
-        update_edge(start,end);
+    void
+TcpAgent::fetch_stats (int start, int end)
+{
+    int my_num = addr ();
+    if (start == my_num)
+    {
+        update_edge (start, end);
         return;
     }
 
     int link_num = -1;
-    Node *me = Node::get_node_by_address(addr());
-    for (int i=0;i<me->topo_links.size();i++){
-        if (me->topo_links[i].n_start == start && me->topo_links[i].n_end == end){
+    Node *me = Node::get_node_by_address (addr ());
+    for (int i = 0; i < me->topo_links.size (); i++)
+    {
+        if (me->topo_links[i].n_start == start
+                && me->topo_links[i].n_end == end)
+        {
             link_num = me->topo_links[i].link_num;
             break;
         }
     }
 
-    int agent_num = my_num*(me->topo_nodes.size());
+    int agent_num = my_num * (me->topo_nodes.size ());
     agent_num = agent_num + start;
     //cout << "POLLING AGENT NO. between "<< start <<"   "<<end << "   " << agent_num<<endl;
-    GlobalAgent* myAgent = global_a_head->next;
-    for (int i=0;i<agent_num;i++){
+    GlobalAgent *myAgent = global_a_head->next;
+    for (int i = 0; i < agent_num; i++)
+    {
         myAgent = myAgent->next;
     }
 
     // poll that agent
-    myAgent->agent->send_c(2,link_num);
+    myAgent->agent->send_c (2, link_num);
     //myAgent->agent->send_c(0,link_num);
 }
 
 // hasnain asks his raza.cc please ask Ayyub's raza.cc to send me info on Link X.
 // hasnain sending flow to farrukh through link X. Ayyub is responsible for link X.
-void TcpAgent::request_stats(int link, int start, int node, int status){
-    Node *me = Node::get_node_by_address(addr());
+    void
+TcpAgent::request_stats (int link, int start, int node, int status)
+{
+    Node *me = Node::get_node_by_address (addr ());
 
-    int agent_num = me->topo_nodes.size()*me->topo_nodes.size();
-    agent_num = agent_num + (addr()*me->topo_nodes.size());
-    agent_num = agent_num + node; // check this
+    int agent_num = me->topo_nodes.size () * me->topo_nodes.size ();
+    agent_num = agent_num + (addr () * me->topo_nodes.size ());
+    agent_num = agent_num + node;	// check this
 
-    GlobalAgent* myAgent = global_a_head->next;
-    for (int i=0;i<agent_num;i++){
+    GlobalAgent *myAgent = global_a_head->next;
+    for (int i = 0; i < agent_num; i++)
+    {
         myAgent = myAgent->next;
     }
 
-    myAgent->agent->send_c(2,link,status); // raza.cc's send_c. 2 NUM_FLOWS_STATS. 1 means start. 0 means stop.
+    myAgent->agent->send_c (2, link, status);	// raza.cc's send_c. 2 NUM_FLOWS_STATS. 1 means start. 0 means stop.
 }
 
 
 
 // eSDN
 // each flow calls it exactly twice.
-void TcpAgent::init_DHT( int status)
+    void
+TcpAgent::init_DHT (int status)
 {
     // status = 1 mean start, 0 mean end
     // change in tcp.h when k changes in fattree generator.
@@ -1562,289 +1896,376 @@ void TcpAgent::init_DHT( int status)
     int start_node = -1;
     int end_node = -1;
 
-    if (addr() < hosts)
+    if (addr () < hosts)
     {
         start_node = 0;
     }
     else
     {
-        start_node = addr() - (addr()%hosts);
+        start_node = addr () - (addr () % hosts);
 
     }
-    end_node = start_node+hosts-1;
-    cout<<"THE START AND END OF MY RACK IS "<<start_node<<"   "<<end_node<<endl;
+    end_node = start_node + hosts - 1;
+
+    cout << "initDHT:: The start and end of my rack is " << start_node
+        << " and endnode::  " << end_node << endl;
+
     Flow_path *fp = flow_path->next;
     int link_num = -1;
-    Node *me = Node::get_node_by_address(addr());
-    while(fp->next!=NULL){
 
-        for (int i=0;i<me->topo_links.size();i++){
-            if (me->topo_links[i].n_start == fp->node && me->topo_links[i].n_end == fp->next->node){
+    Node *me = Node::get_node_by_address (addr ());
+
+    while (fp->next != NULL)
+    {
+        // get the link number in link_num var
+        for (int i = 0; i < me->topo_links.size (); i++)
+        {
+            if (me->topo_links[i].n_start == fp->node
+                && me->topo_links[i].n_end == fp->next->node)
+            {
                 link_num = me->topo_links[i].link_num;
                 break;
             }
         }
 
-        for (int i=0;i<me->fixed_mappings.size();i++) {
-            if (me->fixed_mappings[i].address>=start_node && me->fixed_mappings[i].address<=end_node){
-                for (int j=0;j<me->fixed_mappings[i].fixed_links.size();j++){
-                    if(me->fixed_mappings[i].fixed_links[j].link_num == link_num){
-
+        for (int i = 0; i < me->fixed_mappings.size (); i++)
+        {
+            if (me->fixed_mappings[i].address >= start_node
+                && me->fixed_mappings[i].address <= end_node)
+            {
+                for (int j = 0; j < me->fixed_mappings[i].fixed_links.size ();
+                        j++)
+                {
+                    if (me->fixed_mappings[i].fixed_links[j].link_num ==
+                            link_num)
+                    {
                         // for self managing links. WTF?
-                        if(me->fixed_mappings[i].address == addr()){
-                            cout<<"I HAVE LINK "<<link_num<<endl;
-                            for (int k=0;k<me->fixed_mappings[i].fixed_links[j].node_count.size();k++){
-                                if(me->fixed_mappings[i].fixed_links[j].node_count[k].node==addr()){
-                                    if (status == 1) {
-                                        me->fixed_mappings[i].fixed_links[j].node_count[k].count++;
+                        if (me->fixed_mappings[i].address == addr ())
+                        {
+                            cout << "I HAVE LINK " << link_num << endl;
+                            for (int k = 0;
+                                    k < me->fixed_mappings[i].fixed_links[j].node_count.size();
+                                    k++)
+                            {
+                                if (me->fixed_mappings[i].fixed_links[j].
+                                        node_count[k].node == addr ())
+                                {
+                                    if (status == 1)
+                                    {
+                                        me->fixed_mappings[i].fixed_links[j].
+                                            node_count[k].count++;
                                         break;
                                     }
-                                    else if(status == 0 ){
+                                    else if (status == 0)
+                                    {
                                         me->fixed_mappings[i].fixed_links[j].node_count[k].count--;
-                                        cout << "Ending a flow!!! this should be printed... " << endl;
-
+                                        cout <<
+                                            "Ending a flow!!! this should be printed... "
+                                            << endl;
                                         break;
                                     }
                                 }
                             }
+
                             Node_count nc;
-                            nc.node = addr();
+                            nc.node = addr ();
                             nc.count = 1;
-                            me->fixed_mappings[i].fixed_links[j].node_count.push_back(nc);
+                            me->fixed_mappings[i].fixed_links[j].node_count.
+                                push_back (nc);
                         }
-                        else // till here
+                        else	// till here
                         {
-                            cout<<"REQUESTING " <<me->fixed_mappings[i].address<<" about link "<<link_num<<endl;
-                            request_stats(link_num,fp->node,me->fixed_mappings[i].address,status);
+                            cout << "REQUESTING " << me->fixed_mappings[i].
+                                address << " about link " << link_num << endl;
+                            request_stats (link_num, fp->node,
+                                    me->fixed_mappings[i].address,
+                                    status);
                         }
                     }
                 }
             }
         }
-
-        fp=fp->next;
+        fp = fp->next;
     }
 }
 
-
-
-
-
-
-void TcpAgent::poll_per(){
+    void
+TcpAgent::poll_per ()
+{
     //    cout << "POLLING ALL LINKS" << endl;
     Flow_path *fp = flow_path;
-    while (fp->next!=NULL){
-        fetch_stats(fp->node,fp->next->node);
-        fp=fp->next;
+    while (fp->next != NULL)
+    {
+        fetch_stats (fp->node, fp->next->node);
+        fp = fp->next;
     }
 }
 
-void TcpAgent::poll_per1(){
+    void
+TcpAgent::poll_per1 ()
+{
     //cout << "POLLING ALL LINKS" << endl;
-    btnk_wait = rand()%15+10;
+    btnk_wait = rand () % 15 + 10;
     Flow_path *fp = flow_path;
-    while (fp->next!=NULL){
-        fetch_stats(fp->node,fp->next->node);
-        fp=fp->next;
+    while (fp->next != NULL)
+    {
+        fetch_stats (fp->node, fp->next->node);
+        fp = fp->next;
     }
 }
 
 
-void TcpAgent::poll_btnk_per() {
+    void
+TcpAgent::poll_btnk_per ()
+{
     //cout << btnk_fix<<endl;
     //if (btnk_fix == BTNK_POLL){   // Fixed  CASE
     //    poll_per();                //Fixed CASE
-    if (btnk_fix == btnk_wait){     // Dynamic case
+    if (btnk_fix == btnk_wait)
+    {				// Dynamic case
 
-        poll_per1();                // Dynamic Case
+        poll_per1 ();		// Dynamic Case
         //        cout << "ALL LINKS " <<endl;
         btnk_fix = 0;
     }
 
-    else if(btnk_fix == 1){
+    else if (btnk_fix == 1)
+    {
         //cout << "Figuring out "<<endl;
-        Node *me = Node::get_node_by_address(addr());
+        Node *me = Node::get_node_by_address (addr ());
         double cap1 = -1;
         double cap2;
-        Flow_path* link_btnk = btnk;
-        Flow_path* fp = flow_path;
-        while (fp->next!=NULL){
+        Flow_path *link_btnk = btnk;
+        Flow_path *fp = flow_path;
+        while (fp->next != NULL)
+        {
             // ----- For Overhead Shit
-            int random = rand()%10+1;
-            if (random>3)              // for overhead purposes
+            int random = rand () % 10 + 1;
+            if (random > 3)	// for overhead purposes
                 break;
-            int random1 = rand()%6;
-            for (int i=0;i<random1;i++)
-                fp=fp->next;
+            int random1 = rand () % 6;
+            for (int i = 0; i < random1; i++)
+                fp = fp->next;
             link_btnk = fp;
             break;
             // ----- Remove when done
-            for (int i=0;i<me->topo_links.size();i++){
-                if (me->topo_links[i].n_start == fp->node && me->topo_links[i].n_end == fp->next->node){
-                    cap2 = (me->topo_links[i].capacity*1000000000)/max(1,me->topo_links[i].stats.no_flows);
+            for (int i = 0; i < me->topo_links.size (); i++)
+            {
+                if (me->topo_links[i].n_start == fp->node
+                        && me->topo_links[i].n_end == fp->next->node)
+                {
+                    cap2 =
+                        (me->topo_links[i].capacity * 1000000000) / max (1,
+                                me->
+                                topo_links
+                                [i].
+                                stats.
+                                no_flows);
                 }
             }
-            if ( cap1 < 0 ){
+            if (cap1 < 0)
+            {
                 cap1 = cap2;
                 link_btnk = fp;
             }
-            else if (cap2 < cap1){
+            else if (cap2 < cap1)
+            {
                 cap1 = cap2;
                 link_btnk = fp;
             }
 
-            fp=fp->next;
+            fp = fp->next;
         }
         btnk = link_btnk;
     }
 
-    else{
+    else
+    {
         //cout << "Polling one switch "<< btnk->node  <<endl;
-        fetch_stats(flow_path->node,flow_path->next->node);
-        fetch_stats(btnk->node,btnk->next->node);
+        fetch_stats (flow_path->node, flow_path->next->node);
+        fetch_stats (btnk->node, btnk->next->node);
     }
     btnk_fix++;
 }
 
-
-
-
-
-
-
-void TcpAgent::poll_round_robin() {
-    Flow_path* fp = prev_link;
-    fetch_stats(flow_path->node,flow_path->next->node);
+    void
+TcpAgent::poll_round_robin ()
+{
+    Flow_path *fp = prev_link;
+    fetch_stats (flow_path->node, flow_path->next->node);
     //cout << "POLLING NOW " << fp->node << endl;
-    fetch_stats(prev_link->node,prev_link->next->node);
-    if (prev_link->next->next==NULL){
+    fetch_stats (prev_link->node, prev_link->next->node);
+    if (prev_link->next->next == NULL)
+    {
         prev_link = flow_path->next;
         return;
     }
     prev_link = prev_link->next;
 
     double rate;
-    Node *me = Node::get_node_by_address(addr());
-    for (int i=0;i<me->topo_links.size();i++){
-        if (me->topo_links[i].n_start == flow_path->node && me->topo_links[i].n_end == flow_path->next->node){
-            int ll = max(1,me->topo_links[i].stats.no_flows);
-            rate = me->topo_links[i].capacity*1000000000/ll;
+    Node *me = Node::get_node_by_address (addr ());
+    for (int i = 0; i < me->topo_links.size (); i++)
+    {
+        if (me->topo_links[i].n_start == flow_path->node
+                && me->topo_links[i].n_end == flow_path->next->node)
+        {
+            int ll = max (1, me->topo_links[i].stats.no_flows);
+            rate = me->topo_links[i].capacity * 1000000000 / ll;
         }
     }
 
-    Flow_path* fp1 = flow_path;
-    if (fp!=flow_path->next){
-        while(fp1->next != fp)
+    Flow_path *fp1 = flow_path;
+    if (fp != flow_path->next)
+    {
+        while (fp1->next != fp)
             fp1 = fp1->next;
     }
-    else {
-        while (fp1->next->next!=NULL)
-            fp1=fp1->next;
+    else
+    {
+        while (fp1->next->next != NULL)
+            fp1 = fp1->next;
     }
 
     double rate2;
-    for (int i=0;i<me->topo_links.size();i++){
-        if (me->topo_links[i].n_start == fp1->node && me->topo_links[i].n_end == fp1->next->node){
-            int ll = max(1,me->topo_links[i].stats.no_flows);
-            rate2 = me->topo_links[i].capacity*1000000000/ll;
+    for (int i = 0; i < me->topo_links.size (); i++)
+    {
+        if (me->topo_links[i].n_start == fp1->node
+                && me->topo_links[i].n_end == fp1->next->node)
+        {
+            int ll = max (1, me->topo_links[i].stats.no_flows);
+            rate2 = me->topo_links[i].capacity * 1000000000 / ll;
         }
     }
-    if (rate2<rate)
+    if (rate2 < rate)
         rate = rate2;
 
-    cwnd_ = rate/POLL_RATE;
-    cwnd_ = cwnd_/1500;
+    cwnd_ = rate / POLL_RATE;
+    cwnd_ = cwnd_ / 1500;
     cwnd_ = 0;
 }
 
 /*
-   eSDN
-   */
-void TcpAgent::poll_dht() {
+   eSDN;
+   This fuction calcs the rate for all links in the
+   path of the flow and sets the window according to
+   the min rate from the above set of rates.
+*/
+    void
+TcpAgent::poll_dht ()
+{
     //cout<<"POLL DHT"<<endl;
 
-    Flow_path* fp = flow_path;
-    fetch_stats(flow_path->node,flow_path->next->node); // its own link. edge link. dont need to poll for that.
+    Flow_path *fp = flow_path;
+
+    // its own link. edge link. dont need to poll for that.
+    fetch_stats(flow_path->node, flow_path->next->node);
 
     // RATE
     double rate;
     fp = flow_path;
     int ll = -1;
-    Node *me = Node::get_node_by_address(addr());
-    for (int i=0;i<me->topo_links.size();i++){
-        if (me->topo_links[i].n_start == fp->node && me->topo_links[i].n_end == fp->next->node){
-            ll = max(1,me->topo_links[i].stats.no_flows);
-            rate = me->topo_links[i].capacity*1000000000/ll;
+    Node *me = Node::get_node_by_address(addr ());
+
+    std::cout << "TCP::poll_dht:: this node addr::"
+        << addr() << std::endl;
+
+    for (int i = 0; i < me->topo_links.size (); i++)
+    {
+        // traverses links search for 0 16 -- start and end node
+        // std::cout << "pol_dht:: traversing:: start:: " << me->topo_links[i].n_start
+        //    << "end::" << me->topo_links[i].n_end << std::endl;
+        // std::cout << "fp node is :: " << fp->node
+        //     << "fp->next->node:: "  << fp->next->node << std::endl;
+        if (me->topo_links[i].n_start == fp->node
+            && me->topo_links[i].n_end == fp->next->node)
+        {
+            ll = max (1, me->topo_links[i].stats.no_flows);
+            rate = me->topo_links[i].capacity * 1000000000 / ll;
         }
     }
+
     double rate2;
-    while (fp->next!=NULL){
-        for (int i=0;i<me->topo_links.size();i++){
-            if (me->topo_links[i].n_start == fp->node && me->topo_links[i].n_end == fp->next->node){
-                ll = max(1,me->topo_links[i].stats.no_flows);
-                rate2 = me->topo_links[i].capacity*1000000000/ll;
+    // find rates for all links in path and
+    // set rate variable as min link among all the rates
+    while (fp->next != NULL)
+    {
+        for (int i = 0; i < me->topo_links.size(); i++)
+        {
+            if (me->topo_links[i].n_start == fp->node
+                && me->topo_links[i].n_end == fp->next->node)
+            {
+                ll = max (1, me->topo_links[i].stats.no_flows);
+                rate2 = me->topo_links[i].capacity * 1000000000 / ll;
             }
         }
-        if (rate2<rate)
+
+        // getting min rate
+        if (rate2 < rate)
             rate = rate2;
         fp = fp->next;
     }
-    cwnd_ = rate*POLL_RATE;
-    cwnd_ = cwnd_/(1500);
+
+    // update the cwnd
+    cwnd_ = rate * POLL_RATE;
+    cwnd_ = cwnd_ / (1500);
     //    cwnd_ = cwnd_*0.9;
-
-
 }
 
 
 
-void TcpAgent::every_link_poll() {        // PER LINK POLL PER RTT
+    void
+TcpAgent::every_link_poll ()
+{				// PER LINK POLL PER RTT
     //cout << "MY ADDRESS IS " << here_.port_ <<endl;
     //Scheduler::instance().clock();  // add in fetch stats
     Flow_path *fp = flow_path;
-    while (fp->next!=NULL){
-        fetch_stats(fp->node,fp->next->node);
-        fp=fp->next;
+    while (fp->next != NULL)
+    {
+        fetch_stats (fp->node, fp->next->node);
+        fp = fp->next;
     }
     double rate;
     fp = flow_path;
     int ll = -1;
-    Node *me = Node::get_node_by_address(addr());
-    for (int i=0;i<me->topo_links.size();i++){
-        if (me->topo_links[i].n_start == fp->node && me->topo_links[i].n_end == fp->next->node){
-            ll = max(1,me->topo_links[i].stats.no_flows);
-            rate = me->topo_links[i].capacity*1000000000/ll;
+    Node *me = Node::get_node_by_address (addr ());
+    for (int i = 0; i < me->topo_links.size (); i++)
+    {
+        if (me->topo_links[i].n_start == fp->node
+                && me->topo_links[i].n_end == fp->next->node)
+        {
+            ll = max (1, me->topo_links[i].stats.no_flows);
+            rate = me->topo_links[i].capacity * 1000000000 / ll;
         }
     }
     double rate2;
-    while (fp->next!=NULL){
-        for (int i=0;i<me->topo_links.size();i++){
-            if (me->topo_links[i].n_start == fp->node && me->topo_links[i].n_end == fp->next->node){
-                ll = max(1,me->topo_links[i].stats.no_flows);
-                rate2 = me->topo_links[i].capacity*1000000000/ll;
+    while (fp->next != NULL)
+    {
+        for (int i = 0; i < me->topo_links.size (); i++)
+        {
+            if (me->topo_links[i].n_start == fp->node
+                    && me->topo_links[i].n_end == fp->next->node)
+            {
+                ll = max (1, me->topo_links[i].stats.no_flows);
+                rate2 = me->topo_links[i].capacity * 1000000000 / ll;
             }
         }
-        if (rate2<rate)
+        if (rate2 < rate)
             rate = rate2;
         fp = fp->next;
     }
-    cwnd_ = rate*POLL_RATE;
-    cwnd_ = cwnd_/(1500);
+    cwnd_ = rate * POLL_RATE;
+    cwnd_ = cwnd_ / (1500);
     //    cwnd_ = cwnd_*0.9;
 }
-
-
-
-
 
 /*
  * open up the congestion window
  */
-void TcpAgent::opencwnd()
-{ //HP
+    void
+TcpAgent::opencwnd ()
+{				//HP
 
-    return; // we will do our rate adjustment ourselves. will not use this function for cwnd adjustment.
+    return;			// we will do our rate adjustment ourselves. will not use this function for cwnd adjustment.
     // printf("opencwnd() is good");
     // cwnd_ = getRate();
     // return;
@@ -1854,15 +2275,20 @@ void TcpAgent::opencwnd()
     //cwnd_ = 0;
     //return;
     double increment;
-    if (cwnd_ < ssthresh_) {
+    if (cwnd_ < ssthresh_)
+    {
         /* slow-start (exponential) */
         cwnd_ += 1;
-    } else {
+    }
+    else
+    {
         /* linear */
         double f;
-        switch (wnd_option_) {
+        switch (wnd_option_)
+        {
             case 0:
-                if (++count_ >= cwnd_) {
+                if (++count_ >= cwnd_)
+                {
                     count_ = 0;
                     ++cwnd_;
                 }
@@ -1872,9 +2298,9 @@ void TcpAgent::opencwnd()
                 /* This is the standard algorithm. */
                 increment = increase_num_ / cwnd_;
                 if ((last_cwnd_action_ == 0 ||
-                            last_cwnd_action_ == CWND_ACTION_TIMEOUT)
-                        && max_ssthresh_ > 0) {
-                    increment = limited_slow_start(cwnd_,
+                            last_cwnd_action_ == CWND_ACTION_TIMEOUT) && max_ssthresh_ > 0)
+                {
+                    increment = limited_slow_start (cwnd_,
                             max_ssthresh_, increment);
                 }
                 cwnd_ += increment;
@@ -1893,10 +2319,12 @@ void TcpAgent::opencwnd()
                 f *= wnd_const_;
                 /* f = wnd_const_ * RTT^2 */
                 f += fcnt_;
-                if (f > cwnd_) {
+                if (f > cwnd_)
+                {
                     fcnt_ = 0;
                     ++cwnd_;
-                } else
+                }
+                else
                     fcnt_ = f;
                 break;
 
@@ -1908,10 +2336,12 @@ void TcpAgent::opencwnd()
                 f *= f;
                 f *= wnd_const_;
                 f += fcnt_;
-                if (f > cwnd_) {
+                if (f > cwnd_)
+                {
                     fcnt_ = 0;
                     ++cwnd_;
-                } else
+                }
+                else
                     fcnt_ = f;
                 break;
 
@@ -1922,10 +2352,12 @@ void TcpAgent::opencwnd()
                 f = awnd_;
                 f *= wnd_const_;
                 f += fcnt_;
-                if (f > cwnd_) {
+                if (f > cwnd_)
+                {
                     fcnt_ = 0;
                     ++cwnd_;
-                } else
+                }
+                else
                     fcnt_ = f;
                 break;
             case 5:
@@ -1936,137 +2368,168 @@ void TcpAgent::opencwnd()
                 f = (t_srtt_ >> T_SRTT_BITS) * tcp_tick_;
                 f *= wnd_const_;
                 f += fcnt_;
-                if (f > cwnd_) {
+                if (f > cwnd_)
+                {
                     fcnt_ = 0;
                     ++cwnd_;
-                } else
+                }
+                else
                     fcnt_ = f;
                 break;
             case 6:
                 /* binomial controls */
-                cwnd_ += increase_num_ / (cwnd_*pow(cwnd_,k_parameter_));
+                cwnd_ += increase_num_ / (cwnd_ * pow (cwnd_, k_parameter_));
                 break;
             case 8:
                 /* high-speed TCP, RFC 3649 */
-                increment = increase_param();
+                increment = increase_param ();
                 if ((last_cwnd_action_ == 0 ||
-                            last_cwnd_action_ == CWND_ACTION_TIMEOUT)
-                        && max_ssthresh_ > 0) {
-                    increment = limited_slow_start(cwnd_,
+                            last_cwnd_action_ == CWND_ACTION_TIMEOUT) && max_ssthresh_ > 0)
+                {
+                    increment = limited_slow_start (cwnd_,
                             max_ssthresh_, increment);
                 }
                 cwnd_ += increment;
                 break;
             default:
 #ifdef notdef
-                /*XXX*/
-                error("illegal window option %d", wnd_option_);
+                /*XXX*/ error ("illegal window option %d", wnd_option_);
 #endif
-                abort();
+                abort ();
         }
     }
     // if maxcwnd_ is set (nonzero), make it the cwnd limit
-    if (maxcwnd_ && (int(cwnd_) > maxcwnd_))
+    if (maxcwnd_ && (int (cwnd_) > maxcwnd_))
         cwnd_ = maxcwnd_;
 
     return;
 }
 
     void
-TcpAgent::slowdown(int how)
+TcpAgent::slowdown (int how)
 {
-    double decrease;  /* added for highspeed - sylvia */
+    double decrease;		/* added for highspeed - sylvia */
     double win, halfwin, decreasewin;
     int slowstart = 0;
     ++ncwndcuts_;
-    if (!(how & TCP_IDLE) && !(how & NO_OUTSTANDING_DATA)){
+    if (!(how & TCP_IDLE) && !(how & NO_OUTSTANDING_DATA))
+    {
         ++ncwndcuts1_;
     }
     // we are in slowstart for sure if cwnd < ssthresh
     if (cwnd_ < ssthresh_)
         slowstart = 1;
-    if (precision_reduce_) {
-        halfwin = windowd() / 2;
-        if (wnd_option_ == 6) {
+    if (precision_reduce_)
+    {
+        halfwin = windowd () / 2;
+        if (wnd_option_ == 6)
+        {
             /* binomial controls */
-            decreasewin = windowd() - (1.0-decrease_num_)*pow(windowd(),l_parameter_);
-        } else if (wnd_option_ == 8 && (cwnd_ > low_window_)) {
+            decreasewin =
+                windowd () - (1.0 - decrease_num_) * pow (windowd (),
+                        l_parameter_);
+        }
+        else if (wnd_option_ == 8 && (cwnd_ > low_window_))
+        {
             /* experimental highspeed TCP */
-            decrease = decrease_param();
+            decrease = decrease_param ();
             //if (decrease < 0.1)
             //  decrease = 0.1;
             decrease_num_ = decrease;
-            decreasewin = windowd() - (decrease * windowd());
-        } else {
-            decreasewin = decrease_num_ * windowd();
+            decreasewin = windowd () - (decrease * windowd ());
         }
-        win = windowd();
-    } else  {
+        else
+        {
+            decreasewin = decrease_num_ * windowd ();
+        }
+        win = windowd ();
+    }
+    else
+    {
         int temp;
-        temp = (int)(window() / 2);
+        temp = (int) (window () / 2);
         halfwin = (double) temp;
-        if (wnd_option_ == 6) {
+        if (wnd_option_ == 6)
+        {
             /* binomial controls */
-            temp = (int)(window() - (1.0-decrease_num_)*pow(window(),l_parameter_));
-        } else if ((wnd_option_ == 8) && (cwnd_ > low_window_)) {
+            temp =
+                (int) (window () -
+                        (1.0 - decrease_num_) * pow (window (), l_parameter_));
+        }
+        else if ((wnd_option_ == 8) && (cwnd_ > low_window_))
+        {
             /* experimental highspeed TCP */
-            decrease = decrease_param();
+            decrease = decrease_param ();
             //if (decrease < 0.1)
             //       decrease = 0.1;
             decrease_num_ = decrease;
-            temp = (int)(windowd() - (decrease * windowd()));
-        } else {
-            temp = (int)(decrease_num_ * window());
+            temp = (int) (windowd () - (decrease * windowd ()));
+        }
+        else
+        {
+            temp = (int) (decrease_num_ * window ());
         }
         decreasewin = (double) temp;
-        win = (double) window();
+        win = (double) window ();
     }
     if (how & CLOSE_SSTHRESH_HALF)
         // For the first decrease, decrease by half
         // even for non-standard values of decrease_num_.
         if (first_decrease_ == 1 || slowstart ||
-                last_cwnd_action_ == CWND_ACTION_TIMEOUT) {
+                last_cwnd_action_ == CWND_ACTION_TIMEOUT)
+        {
             // Do we really want halfwin instead of decreasewin
             // after a timeout?
             ssthresh_ = (int) halfwin;
-        } else {
+        }
+        else
+        {
             ssthresh_ = (int) decreasewin;
         }
     // used by DCTCP
-        else if (how & CLOSE_SSTHRESH_DCTCP) {
-            ssthresh_ = (int) ((1 - dctcp_alpha_/2.0) * windowd())*0;
-        } else if (how & THREE_QUARTER_SSTHRESH)
-            if (ssthresh_ < 3*cwnd_/4)
-                ssthresh_  = (int)(3*cwnd_/4);
+    else if (how & CLOSE_SSTHRESH_DCTCP)
+    {
+        ssthresh_ = (int) ((1 - dctcp_alpha_ / 2.0) * windowd ()) * 0;
+    }
+    else if (how & THREE_QUARTER_SSTHRESH)
+        if (ssthresh_ < 3 * cwnd_ / 4)
+            ssthresh_ = (int) (3 * cwnd_ / 4);
     if (how & CLOSE_CWND_HALF)
         // For the first decrease, decrease by half
         // even for non-standard values of decrease_num_.
-        if (first_decrease_ == 1 || slowstart || decrease_num_ == 0.5) {
-            cwnd_ = cwnd_;  //cwnd_ = halfwin;      CCLB CHANGE MADE
-        } else cwnd_ = decreasewin;
-        else if (how & CWND_HALF_WITH_MIN) {
-            // We have not thought about how non-standard TCPs, with
-            // non-standard values of decrease_num_, should respond
-            // after quiescent periods.
-            cwnd_ = cwnd_;    // cwnd_ = decreasewin;   CCLB CHANGE MADE
-            if (cwnd_ < 1)
-                cwnd_ = cwnd_;   //cwnd_ = 1;      CCLB CHANGE MADE
+        if (first_decrease_ == 1 || slowstart || decrease_num_ == 0.5)
+        {
+            cwnd_ = cwnd_;		//cwnd_ = halfwin;      CCLB CHANGE MADE
         }
-        else if (how & CLOSE_CWND_RESTART)
-            cwnd_ = cwnd_;    //cwnd_ = int(wnd_restart_);      CCLB Change MADE
-        else if (how & CLOSE_CWND_INIT)
-            cwnd_ = cwnd_;    // cwnd_ = int(wnd_init_);        CCLB Change MADe
-        else if (how & CLOSE_CWND_ONE)
-            cwnd_ = cwnd_;    //cwnd_ = 1;         CCLB Change MADe
-        else if (how & CLOSE_CWND_HALF_WAY) {
-            // cwnd_ = win - (win - W_used)/2 ;
-            cwnd_ = cwnd_; // CCLB CHANGE MADE cwnd_ = W_used + decrease_num_ * (win - W_used);
-            if (cwnd_ < 1)
-                cwnd_ = cwnd_; // CCLB CHANGE MADE cwnd_ = cw;
-        }
+        else
+            cwnd_ = decreasewin;
+    else if (how & CWND_HALF_WITH_MIN)
+    {
+        // We have not thought about how non-standard TCPs, with
+        // non-standard values of decrease_num_, should respond
+        // after quiescent periods.
+        cwnd_ = cwnd_;		// cwnd_ = decreasewin;   CCLB CHANGE MADE
+        if (cwnd_ < 1)
+            cwnd_ = cwnd_;		//cwnd_ = 1;      CCLB CHANGE MADE
+    }
+    else if (how & CLOSE_CWND_RESTART)
+        cwnd_ = cwnd_;		//cwnd_ = int(wnd_restart_);      CCLB Change MADE
+    else if (how & CLOSE_CWND_INIT)
+        cwnd_ = cwnd_;		// cwnd_ = int(wnd_init_);        CCLB Change MADe
+    else if (how & CLOSE_CWND_ONE)
+        cwnd_ = cwnd_;		//cwnd_ = 1;         CCLB Change MADe
+    else if (how & CLOSE_CWND_HALF_WAY)
+    {
+        // cwnd_ = win - (win - W_used)/2 ;
+        cwnd_ = cwnd_;		// CCLB CHANGE MADE cwnd_ = W_used + decrease_num_ * (win - W_used);
+        if (cwnd_ < 1)
+            cwnd_ = cwnd_;		// CCLB CHANGE MADE cwnd_ = cw;
+    }
     if (ssthresh_ < 2)
         ssthresh_ = 2;
-    if (how & (CLOSE_CWND_HALF|CLOSE_CWND_RESTART|CLOSE_CWND_INIT|CLOSE_CWND_ONE|CLOSE_CWND_DCTCP))
+    if (how &
+            (CLOSE_CWND_HALF | CLOSE_CWND_RESTART | CLOSE_CWND_INIT | CLOSE_CWND_ONE
+             | CLOSE_CWND_DCTCP))
         cong_action_ = TRUE;
 
     fcnt_ = count_ = 0;
@@ -2077,7 +2540,7 @@ TcpAgent::slowdown(int how)
         // Not sure if this is best way to capture slow_start
         // This is probably tracing a superset of slowdowns of
         // which all may not be slow_start's --Padma, 07/'01.
-        trace_event("SLOW_START");
+        trace_event ("SLOW_START");
 
     //cwnd_ = ; // CCLB remove later
 
@@ -2087,18 +2550,20 @@ TcpAgent::slowdown(int how)
 /*
  * Process a packet that acks previously unacknowleged data.
  */
-void TcpAgent::newack(Packet* pkt)
+    void
+TcpAgent::newack (Packet * pkt)
 {
-    double now = Scheduler::instance().clock();
-    hdr_tcp *tcph = hdr_tcp::access(pkt);
+    double now = Scheduler::instance ().clock ();
+    hdr_tcp *tcph = hdr_tcp::access (pkt);
     /*
      * Wouldn't it be better to set the timer *after*
      * updating the RTT, instead of *before*?
      */
-    if (!timerfix_) newtimer(pkt);
+    if (!timerfix_)
+        newtimer (pkt);
     dupacks_ = 0;
-    last_ack_ = tcph->seqno();
-    prev_highest_ack_ = highest_ack_ ;
+    last_ack_ = tcph->seqno ();
+    prev_highest_ack_ = highest_ack_;
     highest_ack_ = last_ack_;
 
     if (t_seqno_ < last_ack_ + 1)
@@ -2109,13 +2574,16 @@ void TcpAgent::newack(Packet* pkt)
      * in the network intersperse acks (e.g., ack-reconstructors) for
      * various reasons (without violating e2e semantics).
      */
-    hdr_flags *fh = hdr_flags::access(pkt);
-    if (!fh->no_ts_) {
-        if (ts_option_) {
-            ts_echo_=tcph->ts_echo();
-            rtt_update(now - tcph->ts_echo());
+    hdr_flags *fh = hdr_flags::access (pkt);
+    if (!fh->no_ts_)
+    {
+        if (ts_option_)
+        {
+            ts_echo_ = tcph->ts_echo ();
+            rtt_update (now - tcph->ts_echo ());
             if (ts_resetRTO_ && (!ect_ || !ecn_backoff_ ||
-                        !hdr_flags::access(pkt)->ecnecho())) {
+                        !hdr_flags::access (pkt)->ecnecho ()))
+            {
                 // From Andrei Gurtov
                 /*
                  * Don't end backoff if still in ECN-Echo with
@@ -2125,9 +2593,10 @@ void TcpAgent::newack(Packet* pkt)
                 ecn_backoff_ = 0;
             }
         }
-        if (rtt_active_ && tcph->seqno() >= rtt_seq_) {
-            if (!ect_ || !ecn_backoff_ ||
-                    !hdr_flags::access(pkt)->ecnecho()) {
+        if (rtt_active_ && tcph->seqno () >= rtt_seq_)
+        {
+            if (!ect_ || !ecn_backoff_ || !hdr_flags::access (pkt)->ecnecho ())
+            {
                 /*
                  * Don't end backoff if still in ECN-Echo with
                  * a congestion window of 1 packet.
@@ -2137,10 +2606,11 @@ void TcpAgent::newack(Packet* pkt)
             }
             rtt_active_ = 0;
             if (!ts_option_)
-                rtt_update(now - rtt_ts_);
+                rtt_update (now - rtt_ts_);
         }
     }
-    if (timerfix_) newtimer(pkt);
+    if (timerfix_)
+        newtimer (pkt);
     /* update average window */
     awnd_ *= 1.0 - wnd_th_;
     awnd_ += wnd_th_ * cwnd_;
@@ -2156,24 +2626,29 @@ void TcpAgent::newack(Packet* pkt)
  * Note that this procedure is called before "highest_ack_" is
  * updated to reflect the current ACK packet.
  */
-void TcpAgent::ecn(int seqno)
+    void
+TcpAgent::ecn (int seqno)
 {
-    if (seqno > recover_ ||
-            last_cwnd_action_ == CWND_ACTION_TIMEOUT) {
-        recover_ =  maxseq_;
+    if (seqno > recover_ || last_cwnd_action_ == CWND_ACTION_TIMEOUT)
+    {
+        recover_ = maxseq_;
         last_cwnd_action_ = CWND_ACTION_ECN;
-        if (cwnd_ <= 1.0) {
+        if (cwnd_ <= 1.0)
+        {
             if (ecn_backoff_)
-                rtt_backoff();
-            else ecn_backoff_ = 1;
-        } else ecn_backoff_ = 0;
+                rtt_backoff ();
+            else
+                ecn_backoff_ = 1;
+        }
+        else
+            ecn_backoff_ = 0;
 
         if (dctcp_)
-            slowdown(CLOSE_CWND_DCTCP|CLOSE_SSTHRESH_DCTCP);
+            slowdown (CLOSE_CWND_DCTCP | CLOSE_SSTHRESH_DCTCP);
         else
-            slowdown(CLOSE_CWND_HALF|CLOSE_SSTHRESH_HALF);
+            slowdown (CLOSE_CWND_HALF | CLOSE_SSTHRESH_HALF);
 
-        ++necnresponses_ ;
+        ++necnresponses_;
         // added by sylvia to count number of ecn responses
     }
 }
@@ -2182,24 +2657,30 @@ void TcpAgent::ecn(int seqno)
  *  Is the connection limited by the network (instead of by a lack
  *    of data from the application?
  */
-int TcpAgent::network_limited() {
-    int win = window () ;
+    int
+TcpAgent::network_limited ()
+{
+    int win = window ();
     if (t_seqno_ > (prev_highest_ack_ + win))
         return 1;
     else
         return 0;
 }
 
-void TcpAgent::recv_newack_helper(Packet *pkt) {
+    void
+TcpAgent::recv_newack_helper (Packet * pkt)
+{
     //hdr_tcp *tcph = hdr_tcp::access(pkt);
-    newack(pkt);
-    if (qs_window_ && highest_ack_ >= qs_window_) {
+    newack (pkt);
+    if (qs_window_ && highest_ack_ >= qs_window_)
+    {
         // All segments in the QS window have been acknowledged.
         // We can exit the Quick-Start phase.
         qs_window_ = 0;
     }
-    if (!ect_ || !hdr_flags::access(pkt)->ecnecho() ||
-            (old_ecn_ && ecn_burst_)) {
+    if (!ect_ || !hdr_flags::access (pkt)->ecnecho () ||
+            (old_ecn_ && ecn_burst_))
+    {
         /* If "old_ecn", this is not the first ACK carrying ECN-Echo
          * after a period of ACKs without ECN-Echo.
          * Therefore, open the congestion window. */
@@ -2207,54 +2688,64 @@ void TcpAgent::recv_newack_helper(Packet *pkt) {
            window limited, then do not increase the window size */
 
         if (!control_increase_ ||
-                (control_increase_ && (network_limited() == 1)))
-            opencwnd();
+                (control_increase_ && (network_limited () == 1)))
+            opencwnd ();
     }
-    if (ect_) {
-        if (!hdr_flags::access(pkt)->ecnecho())
+    if (ect_)
+    {
+        if (!hdr_flags::access (pkt)->ecnecho ())
             ecn_backoff_ = 0;
-        if (!ecn_burst_ && hdr_flags::access(pkt)->ecnecho())
+        if (!ecn_burst_ && hdr_flags::access (pkt)->ecnecho ())
             ecn_burst_ = TRUE;
-        else if (ecn_burst_ && ! hdr_flags::access(pkt)->ecnecho())
+        else if (ecn_burst_ && !hdr_flags::access (pkt)->ecnecho ())
             ecn_burst_ = FALSE;
     }
-    if (!ect_ && hdr_flags::access(pkt)->ecnecho() &&
-            !hdr_flags::access(pkt)->cong_action())
+    if (!ect_ && hdr_flags::access (pkt)->ecnecho () &&
+            !hdr_flags::access (pkt)->cong_action ())
         ect_ = 1;
     /* if the connection is done, call finish() */
-    if ((highest_ack_ >= curseq_-1) && !closed_) {
+    if ((highest_ack_ >= curseq_ - 1) && !closed_)
+    {
         closed_ = 1;
-        finish();
+        finish ();
     }
-    if (QOption_ && curseq_ == highest_ack_ +1) {
-        cancel_rtx_timer();
+    if (QOption_ && curseq_ == highest_ack_ + 1)
+    {
+        cancel_rtx_timer ();
     }
-    if (frto_ == 1) {
+    if (frto_ == 1)
+    {
         /*
          * New ack after RTO. If F-RTO is enabled, try to transmit new
          * previously unsent segments.
          * If there are no new data or receiver window limits the
          * transmission, revert to traditional recovery.
          */
-        if (recover_ + 1 >= highest_ack_ + wnd_ ||
-                recover_ + 1 >= curseq_) {
+        if (recover_ + 1 >= highest_ack_ + wnd_ || recover_ + 1 >= curseq_)
+        {
             frto_ = 0;
-        } else if (highest_ack_ == recover_) {
+        }
+        else if (highest_ack_ == recover_)
+        {
             /*
              * F-RTO step 2a) RTO retransmission fixes whole
              * window => cancel F-RTO
              */
             frto_ = 0;
-        } else {
+        }
+        else
+        {
             t_seqno_ = recover_ + 1;
             frto_ = 2;
         }
-    } else if (frto_ == 2) {
+    }
+    else if (frto_ == 2)
+    {
         /*
          * Second new ack after RTO. If F-RTO is enabled, RTO can be
          * declared spurious
          */
-        spurious_timeout();
+        spurious_timeout ();
     }
 }
 
@@ -2262,7 +2753,7 @@ void TcpAgent::recv_newack_helper(Packet *pkt) {
  * Set the initial window.
  */
     double
-TcpAgent::initial_window()
+TcpAgent::initial_window ()
 {
 
     cout << "Hey initial_window() got called ... " << endl;
@@ -2271,30 +2762,37 @@ TcpAgent::initial_window()
     cout << "Hey initial_window() got called ... " << endl;
     // If Quick-Start Request was approved, use that as a basis for
     // initial window
-    if (qs_cwnd_) {
+    if (qs_cwnd_)
+    {
         return (qs_cwnd_);
     }
     //
     // init_option = 1: static iw of wnd_init_
     //
-    if (wnd_init_option_ == 1) {
+    if (wnd_init_option_ == 1)
+    {
         return (wnd_init_);
     }
-    else if (wnd_init_option_ == 2) {
+    else if (wnd_init_option_ == 2)
+    {
         // do iw according to Internet draft
-        if (size_ <= 1095) {
+        if (size_ <= 1095)
+        {
             return (4.0);
-        } else if (size_ < 2190) {
+        }
+        else if (size_ < 2190)
+        {
             return (3.0);
-        } else {
+        }
+        else
+        {
             return (2.0);
         }
     }
     // XXX what should we return here???
-    fprintf(stderr, "Wrong number of wnd_init_option_ %d\n",
-            wnd_init_option_);
-    abort();
-    return (2.0); // XXX make msvc happy.
+    fprintf (stderr, "Wrong number of wnd_init_option_ %d\n", wnd_init_option_);
+    abort ();
+    return (2.0);			// XXX make msvc happy.
 }
 
 /*
@@ -2321,14 +2819,15 @@ TcpAgent::initial_window()
  * congestion window by less than numdupacks_, then send a new packet.
  */
     void
-TcpAgent::send_one()
+TcpAgent::send_one ()
 {
     if (t_seqno_ <= highest_ack_ + wnd_ && t_seqno_ < curseq_ &&
-            t_seqno_ <= highest_ack_ + cwnd_ + dupacks_ ) {
-        output(t_seqno_, 0);
+            t_seqno_ <= highest_ack_ + cwnd_ + dupacks_)
+    {
+        output (t_seqno_, 0);
         if (QOption_)
-            process_qoption_after_send () ;
-        t_seqno_ ++ ;
+            process_qoption_after_send ();
+        t_seqno_++;
         // send_helper(); ??
     }
     return;
@@ -2337,25 +2836,27 @@ TcpAgent::send_one()
 
 
     void
-TcpAgent::dupack_action()
+TcpAgent::dupack_action ()
 {
     int recovered = (highest_ack_ > recover_);
-    if (recovered || (!bug_fix_ && !ecn_) ||
-            (bugfix_ss_ && highest_ack_ == 0)) {
+    if (recovered || (!bug_fix_ && !ecn_) || (bugfix_ss_ && highest_ack_ == 0))
+    {
         // (highest_ack_ == 0) added to allow Fast Retransmit
         //  when the first data packet is dropped.
         //  Bug report from Mark Allman.
         goto tahoe_action;
     }
 
-    if (ecn_ && last_cwnd_action_ == CWND_ACTION_ECN) {
+    if (ecn_ && last_cwnd_action_ == CWND_ACTION_ECN)
+    {
         last_cwnd_action_ = CWND_ACTION_DUPACK;
-        slowdown(CLOSE_CWND_ONE);
-        reset_rtx_timer(0,0);
+        slowdown (CLOSE_CWND_ONE);
+        reset_rtx_timer (0, 0);
         return;
     }
 
-    if (bug_fix_) {
+    if (bug_fix_)
+    {
         /*
          * The line below, for "bug_fix_" true, avoids
          * problems with multiple fast retransmits in one
@@ -2366,13 +2867,14 @@ TcpAgent::dupack_action()
 
 tahoe_action:
     recover_ = maxseq_;
-    if (!lossQuickStart()) {
+    if (!lossQuickStart ())
+    {
         // we are now going to fast-retransmit and willtrace that event
-        trace_event("FAST_RETX");
+        trace_event ("FAST_RETX");
         last_cwnd_action_ = CWND_ACTION_DUPACK;
-        slowdown(CLOSE_SSTHRESH_HALF|CLOSE_CWND_ONE);
+        slowdown (CLOSE_SSTHRESH_HALF | CLOSE_CWND_ONE);
     }
-    reset_rtx_timer(0,0);
+    reset_rtx_timer (0, 0);
     return;
 }
 
@@ -2380,73 +2882,81 @@ tahoe_action:
  * When exiting QuickStart, reduce the congestion window to the
  *   size that was actually used.
  */
-void TcpAgent::endQuickStart()
+    void
+TcpAgent::endQuickStart ()
 {
     qs_approved_ = 0;
     qs_cwnd_ = 0;
     qs_window_ = maxseq_;
     int new_cwnd = maxseq_ - last_ack_;
-    if (new_cwnd > 1 && new_cwnd < cwnd_) {
-        cwnd_ = cwnd_; // CCLB CHANGE MADE     cwnd_ = new_cwnd;
-        if (cwnd_ < initial_window())
-            cwnd_ = initial_window();
+    if (new_cwnd > 1 && new_cwnd < cwnd_)
+    {
+        cwnd_ = cwnd_;		// CCLB CHANGE MADE     cwnd_ = new_cwnd;
+        if (cwnd_ < initial_window ())
+            cwnd_ = initial_window ();
     }
 
     //cwnd_ = 0;// CCLB REMOVE LATER
 }
 
-void TcpAgent::processQuickStart(Packet *pkt)
+    void
+TcpAgent::processQuickStart (Packet * pkt)
 {
     // QuickStart code from Srikanth Sundarrajan.
-    hdr_tcp *tcph = hdr_tcp::access(pkt);
-    hdr_qs *qsh = hdr_qs::access(pkt);
-    double now = Scheduler::instance().clock();
+    hdr_tcp *tcph = hdr_tcp::access (pkt);
+    hdr_qs *qsh = hdr_qs::access (pkt);
+    double now = Scheduler::instance ().clock ();
     int app_rate;
 
     // printf("flag: %d ttl: %d ttl_diff: %d rate: %d\n", qsh->flag(),
     //     qsh->ttl(), ttl_diff_, qsh->rate());
     qs_requested_ = 0;
     qs_approved_ = 0;
-    if (qsh->flag() == QS_RESPONSE && qsh->ttl() == ttl_diff_ &&
-            qsh->rate() > 0) {
-        app_rate = (int) ((hdr_qs::rate_to_Bps(qsh->rate()) *
-                    (now - tcph->ts_echo())) / (size_ + headersize()));
-        if (print_request_) {
-            double num1 = hdr_qs::rate_to_Bps(qsh->rate());
-            double time = now - tcph->ts_echo();
-            int size = size_ + headersize();
-            printf("Quick Start request, rate: %g Bps, encoded rate: %d\n",
-                    num1, qsh->rate());
-            printf("Quick Start request, window %d rtt: %4.2f pktsize: %d\n",
+    if (qsh->flag () == QS_RESPONSE && qsh->ttl () == ttl_diff_ &&
+            qsh->rate () > 0)
+    {
+        app_rate = (int) ((hdr_qs::rate_to_Bps (qsh->rate ()) *
+                    (now - tcph->ts_echo ())) / (size_ + headersize ()));
+        if (print_request_)
+        {
+            double num1 = hdr_qs::rate_to_Bps (qsh->rate ());
+            double time = now - tcph->ts_echo ();
+            int size = size_ + headersize ();
+            printf ("Quick Start request, rate: %g Bps, encoded rate: %d\n",
+                    num1, qsh->rate ());
+            printf ("Quick Start request, window %d rtt: %4.2f pktsize: %d\n",
                     app_rate, time, size);
         }
-        if (app_rate > initial_window()) {
+        if (app_rate > initial_window ())
+        {
             qs_cwnd_ = app_rate;
             qs_approved_ = 1;
         }
-    } else { // Quick Start rejected
+    }
+    else
+    {				// Quick Start rejected
 #ifdef QS_DEBUG
-        printf("Quick Start rejected\n");
+        printf ("Quick Start rejected\n");
 #endif
     }
 
 }
 
-
-
 /*
  * ACK has been received, hook from recv()
  */
-void TcpAgent::recv_frto_helper(Packet *pkt)
+    void
+TcpAgent::recv_frto_helper (Packet * pkt)
 {
-    hdr_tcp *tcph = hdr_tcp::access(pkt);
-    if (tcph->seqno() == last_ack_ && frto_ != 0) {
+    hdr_tcp *tcph = hdr_tcp::access (pkt);
+    if (tcph->seqno () == last_ack_ && frto_ != 0)
+    {
         /*
          * Duplicate ACK while in F-RTO indicates that the
          * timeout was valid. Go to slow start retransmissions.
          */
         t_seqno_ = highest_ack_ + 1;
-        cwnd_ = cwnd_; //cwnd_ = frto_; CCLB REMOVE LATER
+        cwnd_ = cwnd_;		//cwnd_ = frto_; CCLB REMOVE LATER
 
         frto_ = 0;
 
@@ -2460,31 +2970,33 @@ void TcpAgent::recv_frto_helper(Packet *pkt)
 /*
  * A spurious timeout has been detected. Do appropriate actions.
  */
-void TcpAgent::spurious_timeout()
+    void
+TcpAgent::spurious_timeout ()
 {
     frto_ = 0;
 
-    switch (spurious_response_) {
+    switch (spurious_response_)
+    {
         case 1:
         default:
             /*
              * Full revert of congestion window
              * (FlightSize before last acknowledgment)
              */
-            cwnd_ = cwnd_; // CCLB CHANGE MADE cwnd_ = t_seqno_ - prev_highest_ack_;
+            cwnd_ = cwnd_;		// CCLB CHANGE MADE cwnd_ = t_seqno_ - prev_highest_ack_;
             break;
 
         case 2:
             /*
              * cwnd = reduced ssthresh (approx. half of the earlier pipe)
              */
-            cwnd_ = cwnd_; // CCLB CHANGE MADE cwnd_ = ssthresh_;
+            cwnd_ = cwnd_;		// CCLB CHANGE MADE cwnd_ = ssthresh_;
             break;
         case 3:
             /*
              * slow start, but without retransmissions
              */
-            cwnd_ = cwnd_; // CCLB CHANGE MADE cwnd_ = 1;
+            cwnd_ = cwnd_;		// CCLB CHANGE MADE cwnd_ = 1;
             break;
     }
 
@@ -2510,15 +3022,17 @@ void TcpAgent::spurious_timeout()
  *
  * Return value: non-zero if Quick-Start specific loss recovery took place
  */
-int TcpAgent::lossQuickStart()
+    int
+TcpAgent::lossQuickStart ()
 {
-    if (qs_window_ && tcp_qs_recovery_) {
+    if (qs_window_ && tcp_qs_recovery_)
+    {
         //recover_ = maxseq_;
         //reset_rtx_timer(1,0);
-        slowdown(CLOSE_CWND_INIT);
+        slowdown (CLOSE_CWND_INIT);
         // reset ssthresh to half of W-D/2?
         qs_window_ = 0;
-        output(last_ack_ + 1, TCP_REASON_DUPACK);
+        output (last_ack_ + 1, TCP_REASON_DUPACK);
         return 1;
     }
     return 0;
@@ -2531,65 +3045,75 @@ int TcpAgent::lossQuickStart()
  * main reception path - should only see acks, otherwise the
  * network connections are misconfigured
  */
-void TcpAgent::recv(Packet *pkt, Handler*)
+    void
+TcpAgent::recv (Packet * pkt, Handler *)
 {
-    hdr_tcp *tcph = hdr_tcp::access(pkt);
+    hdr_tcp *tcph = hdr_tcp::access (pkt);
     int valid_ack = 0;
-    if (qs_approved_ == 1 && tcph->seqno() > last_ack_)
-        endQuickStart();
+    if (qs_approved_ == 1 && tcph->seqno () > last_ack_)
+        endQuickStart ();
     if (qs_requested_ == 1)
-        processQuickStart(pkt);
+        processQuickStart (pkt);
 #ifdef notdef
-    if (pkt->type_ != PT_ACK) {
-        Tcl::instance().evalf("%s error \"received non-ack\"",
-                name());
-        Packet::free(pkt);
+    if (pkt->type_ != PT_ACK)
+    {
+        Tcl::instance ().evalf ("%s error \"received non-ack\"", name ());
+        Packet::free (pkt);
         return;
     }
 #endif
     /* W.N.: check if this is from a previous incarnation */
-    if (tcph->ts() < lastreset_) {
+    if (tcph->ts () < lastreset_)
+    {
         // Remove packet and do nothing
-        Packet::free(pkt);
+        Packet::free (pkt);
         return;
     }
     ++nackpack_;
-    ts_peer_ = tcph->ts();
-    int ecnecho = hdr_flags::access(pkt)->ecnecho();
+    ts_peer_ = tcph->ts ();
+    int ecnecho = hdr_flags::access (pkt)->ecnecho ();
     if (ecnecho && ecn_)
-        ecn(tcph->seqno());
-    recv_helper(pkt);
-    recv_frto_helper(pkt);
+        ecn (tcph->seqno ());
+    recv_helper (pkt);
+    recv_frto_helper (pkt);
     /* grow cwnd and check if the connection is done */
-    if (tcph->seqno() > last_ack_) {
-        recv_newack_helper(pkt);
-        if (last_ack_ == 0 && delay_growth_) {
-            cwnd_ = cwnd_;// cwnd_ = initial_window();  CCLB REMOVE LATER
+    if (tcph->seqno () > last_ack_)
+    {
+        recv_newack_helper (pkt);
+        if (last_ack_ == 0 && delay_growth_)
+        {
+            cwnd_ = cwnd_;	// cwnd_ = initial_window();  CCLB REMOVE LATER
         }
-    } else if (tcph->seqno() == last_ack_) {
-        if (hdr_flags::access(pkt)->eln_ && eln_) {
-            tcp_eln(pkt);
+    }
+    else if (tcph->seqno () == last_ack_)
+    {
+        if (hdr_flags::access (pkt)->eln_ && eln_)
+        {
+            tcp_eln (pkt);
             return;
         }
-        if (++dupacks_ == numdupacks_ && !noFastRetrans_) {
-            dupack_action();
-        } else if (dupacks_ < numdupacks_ && singledup_ ) {
-            send_one();
+        if (++dupacks_ == numdupacks_ && !noFastRetrans_)
+        {
+            dupack_action ();
+        }
+        else if (dupacks_ < numdupacks_ && singledup_)
+        {
+            send_one ();
         }
     }
 
     if (QOption_ && EnblRTTCtr_)
-        process_qoption_after_ack (tcph->seqno());
+        process_qoption_after_ack (tcph->seqno ());
 
-    if (tcph->seqno() >= last_ack_)
+    if (tcph->seqno () >= last_ack_)
         // Check if ACK is valid.  Suggestion by Mark Allman.
         valid_ack = 1;
-    Packet::free(pkt);
+    Packet::free (pkt);
     /*
      * Try to send more data.
      */
     if (valid_ack || aggressive_maxburst_)
-        send_much(0, 0, maxburst_);
+        send_much (0, 0, maxburst_);
 }
 
 /*
@@ -2597,33 +3121,39 @@ void TcpAgent::recv(Packet *pkt, Handler*)
  * function allows derived classes to make alterations/enhancements (e.g.,
  * response to new types of timeout events).
  */
-void TcpAgent::timeout_nonrtx(int tno)
+    void
+TcpAgent::timeout_nonrtx (int tno)
 {
-    if (tno == TCP_TIMER_DELSND)  {
+    if (tno == TCP_TIMER_DELSND)
+    {
         /*
          * delayed-send timer, with random overhead
          * to avoid phase effects
          */
-        send_much(1, TCP_REASON_TIMEOUT, maxburst_);
+        send_much (1, TCP_REASON_TIMEOUT, maxburst_);
     }
 }
 
-void TcpAgent::timeout(int tno)
+    void
+TcpAgent::timeout (int tno)
 {
     /* retransmit timer */
-    if (tno == TCP_TIMER_RTX) {
+    if (tno == TCP_TIMER_RTX)
+    {
 
         // There has been a timeout - will trace this event
-        trace_event("TIMEOUT");
+        trace_event ("TIMEOUT");
 
         frto_ = 0;
         // Set pipe_prev as per Eifel Response
-        pipe_prev_ = (window() > ssthresh_) ?
-            window() : (int)ssthresh_;
+        pipe_prev_ = (window () > ssthresh_) ? window () : (int) ssthresh_;
 
-        if (cwnd_ < 1) cwnd_ = 1;
-        if (qs_approved_ == 1) qs_approved_ = 0;
-        if (highest_ack_ == maxseq_ && !slow_start_restart_) {
+        if (cwnd_ < 1)
+            cwnd_ = 1;
+        if (qs_approved_ == 1)
+            qs_approved_ = 0;
+        if (highest_ack_ == maxseq_ && !slow_start_restart_)
+        {
             /*
              * TCP option:
              * If no outstanding data, then don't do anything.
@@ -2631,7 +3161,9 @@ void TcpAgent::timeout(int tno)
             // Should this return be here?
             // What if CWND_ACTION_ECN and cwnd < 1?
             // return;
-        } else {
+        }
+        else
+        {
             recover_ = maxseq_;
             if (highest_ack_ == -1 && wnd_init_option_ == 2)
                 /*
@@ -2640,8 +3172,7 @@ void TcpAgent::timeout(int tno)
                  */
                 wnd_init_option_ = 1;
             else if ((highest_ack_ == -1) &&
-                    (wnd_init_option_ == 1) && (wnd_init_ > 1)
-                    && bugfix_ss_)
+                    (wnd_init_option_ == 1) && (wnd_init_ > 1) && bugfix_ss_)
                 /*
                  * First packet dropped, so don't use larger
                  * initial windows.  Bugfix from Mark Allman.
@@ -2652,39 +3183,46 @@ void TcpAgent::timeout(int tno)
                  * if there is no outstanding data, don't cut
                  * down ssthresh_.
                  */
-                slowdown(CLOSE_CWND_ONE|NO_OUTSTANDING_DATA);
+                slowdown (CLOSE_CWND_ONE | NO_OUTSTANDING_DATA);
             else if (highest_ack_ < recover_ &&
-                    last_cwnd_action_ == CWND_ACTION_ECN) {
+                    last_cwnd_action_ == CWND_ACTION_ECN)
+            {
                 /*
                  * if we are in recovery from a recent ECN,
                  * don't cut down ssthresh_.
                  */
-                slowdown(CLOSE_CWND_ONE);
-                if (frto_enabled_ || sfrto_enabled_) {
+                slowdown (CLOSE_CWND_ONE);
+                if (frto_enabled_ || sfrto_enabled_)
+                {
                     frto_ = 1;
                 }
             }
-            else {
+            else
+            {
                 ++nrexmit_;
                 last_cwnd_action_ = CWND_ACTION_TIMEOUT;
-                slowdown(CLOSE_SSTHRESH_HALF|CLOSE_CWND_RESTART);
-                if (frto_enabled_ || sfrto_enabled_) {
+                slowdown (CLOSE_SSTHRESH_HALF | CLOSE_CWND_RESTART);
+                if (frto_enabled_ || sfrto_enabled_)
+                {
                     frto_ = 1;
                 }
             }
         }
         /* if there is no outstanding data, don't back off rtx timer */
-        if (highest_ack_ == maxseq_ && restart_bugfix_) {
-            reset_rtx_timer(0,0);
+        if (highest_ack_ == maxseq_ && restart_bugfix_)
+        {
+            reset_rtx_timer (0, 0);
         }
-        else {
-            reset_rtx_timer(0,1);
+        else
+        {
+            reset_rtx_timer (0, 1);
         }
         last_cwnd_action_ = CWND_ACTION_TIMEOUT;
-        send_much(0, TCP_REASON_TIMEOUT, maxburst_);
+        send_much (0, TCP_REASON_TIMEOUT, maxburst_);
     }
-    else {
-        timeout_nonrtx(tno);
+    else
+    {
+        timeout_nonrtx (tno);
     }
     //cwnd_ = 0; // CCLB REMOVE LATER
 }
@@ -2694,20 +3232,23 @@ void TcpAgent::timeout(int tno)
  * last ELN-rxmitted packet is smaller than this one, then retransmit the
  * packet.  Do not adjust the cwnd when this happens.
  */
-void TcpAgent::tcp_eln(Packet *pkt)
+    void
+TcpAgent::tcp_eln (Packet * pkt)
 {
     //int eln_rxmit;
-    hdr_tcp *tcph = hdr_tcp::access(pkt);
-    int ack = tcph->seqno();
+    hdr_tcp *tcph = hdr_tcp::access (pkt);
+    int ack = tcph->seqno ();
 
-    if (++dupacks_ == eln_rxmit_thresh_ && ack > eln_last_rxmit_) {
+    if (++dupacks_ == eln_rxmit_thresh_ && ack > eln_last_rxmit_)
+    {
         /* Retransmit this packet */
-        output(last_ack_ + 1, TCP_REASON_DUPACK);
-        eln_last_rxmit_ = last_ack_+1;
-    } else
-        send_much(0, 0, maxburst_);
+        output (last_ack_ + 1, TCP_REASON_DUPACK);
+        eln_last_rxmit_ = last_ack_ + 1;
+    }
+    else
+        send_much (0, 0, maxburst_);
 
-    Packet::free(pkt);
+    Packet::free (pkt);
     return;
 }
 
@@ -2717,30 +3258,35 @@ void TcpAgent::tcp_eln(Packet *pkt)
  */
 
 // added by us
-ofstream out1("finish_times.txt");
+ofstream out1 ("finish_times.txt");
 // added by us
-void TcpAgent::finish()
+    void
+TcpAgent::finish ()
 {
-    Tcl::instance().evalf("%s done", this->name());
+    Tcl::instance ().evalf ("%s done", this->name ());
     // added by us
-    out1 << here_.addr_ << "\t" << here_.port_ << "\t" << dst_.addr_ << "\t" << dst_.port_ << "\t";
-    out1 << setprecision(15) << Scheduler::instance().clock() << endl;
+    out1 << here_.addr_ << "\t" << here_.port_ << "\t" << dst_.
+        addr_ << "\t" << dst_.port_ << "\t";
+    out1 << setprecision (15) << Scheduler::instance ().clock () << endl;
     // added by us
 }
 
-void RtxTimer::expire(Event*)
+    void
+RtxTimer::expire (Event *)
 {
-    a_->timeout(TCP_TIMER_RTX);
+    a_->timeout (TCP_TIMER_RTX);
 }
 
-void DelSndTimer::expire(Event*)
+    void
+DelSndTimer::expire (Event *)
 {
-    a_->timeout(TCP_TIMER_DELSND);
+    a_->timeout (TCP_TIMER_DELSND);
 }
 
-void BurstSndTimer::expire(Event*)
+    void
+BurstSndTimer::expire (Event *)
 {
-    a_->timeout(TCP_TIMER_BURSTSND);
+    a_->timeout (TCP_TIMER_BURSTSND);
 }
 
 /*
@@ -2757,38 +3303,44 @@ void BurstSndTimer::expire(Event*)
  * another one will not be done until the last packet transmitted before
  * the previous source quench has been ACKed.
  */
-void TcpAgent::quench(int how)
+    void
+TcpAgent::quench (int how)
 {
-    if (highest_ack_ >= recover_) {
-        recover_ =  maxseq_;
+    if (highest_ack_ >= recover_)
+    {
+        recover_ = maxseq_;
         last_cwnd_action_ = CWND_ACTION_ECN;
-        closecwnd(how);
+        closecwnd (how);
     }
 }
 
 /*
  * close down the congestion window
  */
-void TcpAgent::closecwnd(int how)
+    void
+TcpAgent::closecwnd (int how)
 {
     static int first_time = 1;
-    if (first_time == 1) {
-        fprintf(stderr, "the TcpAgent::closecwnd() function is now deprecated, please use the function slowdown() instead\n");
+    if (first_time == 1)
+    {
+        fprintf (stderr,
+                "the TcpAgent::closecwnd() function is now deprecated, please use the function slowdown() instead\n");
     }
-    switch (how) {
+    switch (how)
+    {
         case 0:
             /* timeouts */
-            ssthresh_ = int( window() / 2 );
+            ssthresh_ = int (window () / 2);
             if (ssthresh_ < 2)
                 ssthresh_ = 2;
-            cwnd_ = int(wnd_restart_);
+            cwnd_ = int (wnd_restart_);
             break;
 
         case 1:
             /* Reno dup acks, or after a recent congestion indication. */
             // cwnd_ = window()/2;
-            cwnd_ = cwnd_; // CCLB CHANGE MADE  cwnd_ = decrease_num_ * window();
-            ssthresh_ = int(cwnd_);
+            cwnd_ = cwnd_;		// CCLB CHANGE MADE  cwnd_ = decrease_num_ * window();
+            ssthresh_ = int (cwnd_);
             if (ssthresh_ < 2)
                 ssthresh_ = 2;
             break;
@@ -2796,23 +3348,23 @@ void TcpAgent::closecwnd(int how)
         case 2:
             /* Tahoe dup acks
              * after a recent congestion indication */
-            cwnd_ = cwnd_; // CCLB CHANGE MADE cwnd_ = wnd_init_;
+            cwnd_ = cwnd_;		// CCLB CHANGE MADE cwnd_ = wnd_init_;
             break;
 
         case 3:
             /* Retransmit timeout, but no outstanding data. */
-            cwnd_ = cwnd_; // CCLB CHANGE MADE cwnd_ = int(wnd_init_);
+            cwnd_ = cwnd_;		// CCLB CHANGE MADE cwnd_ = int(wnd_init_);
             break;
         case 4:
             /* Tahoe dup acks */
-            ssthresh_ = int( window() / 2 );
+            ssthresh_ = int (window () / 2);
             if (ssthresh_ < 2)
                 ssthresh_ = 2;
             cwnd_ = 1;
             break;
 
         default:
-            abort();
+            abort ();
     }
     fcnt_ = 0.;
     count_ = 0;
@@ -2824,42 +3376,51 @@ void TcpAgent::closecwnd(int how)
  * Check if the sender has been idle or application-limited for more
  * than an RTO, and if so, reduce the congestion window.
  */
-void TcpAgent::process_qoption_after_send ()
+    void
+TcpAgent::process_qoption_after_send ()
 {
-    int tcp_now = (int)(Scheduler::instance().clock()/tcp_tick_ + 0.5);
-    int rto = (int)(t_rtxcur_/tcp_tick_) ;
-    /*double ct = Scheduler::instance().clock();*/
+    int tcp_now = (int) (Scheduler::instance ().clock () / tcp_tick_ + 0.5);
+    int rto = (int) (t_rtxcur_ / tcp_tick_);
+    /*double ct = Scheduler::instance().clock(); */
 
-    if (!EnblRTTCtr_) {
-        if (tcp_now - T_last >= rto) {
+    if (!EnblRTTCtr_)
+    {
+        if (tcp_now - T_last >= rto)
+        {
             // The sender has been idle.
-            slowdown(THREE_QUARTER_SSTHRESH|TCP_IDLE) ;
-            for (int i = 0 ; i < (tcp_now - T_last)/rto; i ++) {
-                slowdown(CWND_HALF_WITH_MIN|TCP_IDLE);
+            slowdown (THREE_QUARTER_SSTHRESH | TCP_IDLE);
+            for (int i = 0; i < (tcp_now - T_last) / rto; i++)
+            {
+                slowdown (CWND_HALF_WITH_MIN | TCP_IDLE);
             }
-            T_prev = tcp_now ;
-            W_used = 0 ;
+            T_prev = tcp_now;
+            W_used = 0;
         }
-        T_last = tcp_now ;
-        if (t_seqno_ == highest_ack_+ window()) {
-            T_prev = tcp_now ;
-            W_used = 0 ;
+        T_last = tcp_now;
+        if (t_seqno_ == highest_ack_ + window ())
+        {
+            T_prev = tcp_now;
+            W_used = 0;
         }
-        else if (t_seqno_ == curseq_-1) {
+        else if (t_seqno_ == curseq_ - 1)
+        {
             // The sender has no more data to send.
-            int tmp = t_seqno_ - highest_ack_ ;
+            int tmp = t_seqno_ - highest_ack_;
             if (tmp > W_used)
-                W_used = tmp ;
-            if (tcp_now - T_prev >= rto) {
+                W_used = tmp;
+            if (tcp_now - T_prev >= rto)
+            {
                 // The sender has been application-limited.
-                slowdown(THREE_QUARTER_SSTHRESH|TCP_IDLE);
-                slowdown(CLOSE_CWND_HALF_WAY|TCP_IDLE);
-                T_prev = tcp_now ;
-                W_used = 0 ;
+                slowdown (THREE_QUARTER_SSTHRESH | TCP_IDLE);
+                slowdown (CLOSE_CWND_HALF_WAY | TCP_IDLE);
+                T_prev = tcp_now;
+                W_used = 0;
             }
         }
-    } else {
-        rtt_counting();
+    }
+    else
+    {
+        rtt_counting ();
     }
 }
 
@@ -2870,105 +3431,117 @@ void TcpAgent::process_qoption_after_send ()
  * a single clock tick.
  */
     void
-TcpAgent::rtt_counting()
+TcpAgent::rtt_counting ()
 {
-    int tcp_now = (int)(Scheduler::instance().clock()/tcp_tick_ + 0.5);
-    int rtt = (int(t_srtt_) >> T_SRTT_BITS) ;
+    int tcp_now = (int) (Scheduler::instance ().clock () / tcp_tick_ + 0.5);
+    int rtt = (int (t_srtt_) >> T_SRTT_BITS);
 
     if (rtt < 1)
-        rtt = 1 ;
-    if (tcp_now - T_last >= 2*rtt) {
+        rtt = 1;
+    if (tcp_now - T_last >= 2 * rtt)
+    {
         // The sender has been idle.
-        int RTTs ;
-        RTTs = (tcp_now -T_last)*RTT_goodcount/(rtt*2) ;
-        RTTs = RTTs - Backoffs ;
-        Backoffs = 0 ;
-        if (RTTs > 0) {
-            slowdown(THREE_QUARTER_SSTHRESH|TCP_IDLE) ;
-            for (int i = 0 ; i < RTTs ; i ++) {
-                slowdown(CWND_HALF_WITH_MIN|TCP_IDLE);
-                RTT_prev = RTT_count ;
-                W_used = 0 ;
+        int RTTs;
+        RTTs = (tcp_now - T_last) * RTT_goodcount / (rtt * 2);
+        RTTs = RTTs - Backoffs;
+        Backoffs = 0;
+        if (RTTs > 0)
+        {
+            slowdown (THREE_QUARTER_SSTHRESH | TCP_IDLE);
+            for (int i = 0; i < RTTs; i++)
+            {
+                slowdown (CWND_HALF_WITH_MIN | TCP_IDLE);
+                RTT_prev = RTT_count;
+                W_used = 0;
             }
         }
     }
-    T_last = tcp_now ;
-    if (tcp_now - T_start >= 2*rtt) {
-        if ((RTT_count > RTT_goodcount) || (F_full == 1)) {
-            RTT_goodcount = RTT_count ;
-            if (RTT_goodcount < 1) RTT_goodcount = 1 ;
+    T_last = tcp_now;
+    if (tcp_now - T_start >= 2 * rtt)
+    {
+        if ((RTT_count > RTT_goodcount) || (F_full == 1))
+        {
+            RTT_goodcount = RTT_count;
+            if (RTT_goodcount < 1)
+                RTT_goodcount = 1;
         }
-        RTT_prev = RTT_prev - RTT_count ;
-        RTT_count = 0 ;
-        T_start  = tcp_now ;
+        RTT_prev = RTT_prev - RTT_count;
+        RTT_count = 0;
+        T_start = tcp_now;
         F_full = 0;
     }
-    if (t_seqno_ == highest_ack_ + window()) {
-        W_used = 0 ;
-        F_full = 1 ;
-        RTT_prev = RTT_count ;
+    if (t_seqno_ == highest_ack_ + window ())
+    {
+        W_used = 0;
+        F_full = 1;
+        RTT_prev = RTT_count;
     }
-    else if (t_seqno_ == curseq_-1) {
+    else if (t_seqno_ == curseq_ - 1)
+    {
         // The sender has no more data to send.
-        int tmp = t_seqno_ - highest_ack_ ;
+        int tmp = t_seqno_ - highest_ack_;
         if (tmp > W_used)
-            W_used = tmp ;
-        if (RTT_count - RTT_prev >= 2) {
+            W_used = tmp;
+        if (RTT_count - RTT_prev >= 2)
+        {
             // The sender has been application-limited.
-            slowdown(THREE_QUARTER_SSTHRESH|TCP_IDLE) ;
-            slowdown(CLOSE_CWND_HALF_WAY|TCP_IDLE);
-            RTT_prev = RTT_count ;
-            Backoffs ++ ;
+            slowdown (THREE_QUARTER_SSTHRESH | TCP_IDLE);
+            slowdown (CLOSE_CWND_HALF_WAY | TCP_IDLE);
+            RTT_prev = RTT_count;
+            Backoffs++;
             W_used = 0;
         }
     }
-    if (F_counting == 0) {
-        W_timed = t_seqno_  ;
-        F_counting = 1 ;
+    if (F_counting == 0)
+    {
+        W_timed = t_seqno_;
+        F_counting = 1;
     }
 }
 
-void TcpAgent::process_qoption_after_ack (int seqno)
+    void
+TcpAgent::process_qoption_after_ack (int seqno)
 {
-    if (F_counting == 1) {
-        if (seqno >= W_timed) {
-            RTT_count ++ ;
-            F_counting = 0 ;
+    if (F_counting == 1)
+    {
+        if (seqno >= W_timed)
+        {
+            RTT_count++;
+            F_counting = 0;
         }
-        else {
+        else
+        {
             if (dupacks_ == numdupacks_)
-                RTT_count ++ ;
+                RTT_count++;
         }
     }
 }
 
-void TcpAgent::trace_event(char *eventtype)
+    void
+TcpAgent::trace_event (char *eventtype)
 {
-    if (et_ == NULL) return;
+    if (et_ == NULL)
+        return;
     int seqno = t_seqno_;
-    char *wrk = et_->buffer();
-    char *nwrk = et_->nbuffer();
+    char *wrk = et_->buffer ();
+    char *nwrk = et_->nbuffer ();
     if (wrk != 0)
-        sprintf(wrk,
-                "E "TIME_FORMAT" %d %d TCP %s %d %d %d",
-                et_->round(Scheduler::instance().clock()),   // time
-                addr(),                       // owner (src) node id
-                daddr(),                      // dst node id
-                eventtype,                    // event type
-                fid_,                         // flow-id
-                seqno,                        // current seqno
-                int(cwnd_)                         //cong. window
-               );
+        sprintf (wrk, "E " TIME_FORMAT " %d %d TCP %s %d %d %d", et_->round (Scheduler::instance ().clock ()),	// time
+                addr (),		// owner (src) node id
+                daddr (),		// dst node id
+                eventtype,		// event type
+                fid_,		// flow-id
+                seqno,		// current seqno
+                int (cwnd_)	//cong. window
+                );
 
     if (nwrk != 0)
-        sprintf(nwrk,
-                "E -t "TIME_FORMAT" -o TCP -e %s -s %d.%d -d %d.%d",
-                et_->round(Scheduler::instance().clock()),   // time
-                eventtype,                    // event type
-                addr(),                       // owner (src) node id
-                port(),                       // owner (src) port id
-                daddr(),                      // dst node id
-                dport()                       // dst port id
-               );
-    et_->trace();
+        sprintf (nwrk, "E -t " TIME_FORMAT " -o TCP -e %s -s %d.%d -d %d.%d", et_->round (Scheduler::instance ().clock ()),	// time
+                eventtype,		// event type
+                addr (),		// owner (src) node id
+                port (),		// owner (src) port id
+                daddr (),		// dst node id
+                dport ()		// dst port id
+                );
+    et_->trace ();
 }
