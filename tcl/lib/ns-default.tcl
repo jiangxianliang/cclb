@@ -828,7 +828,7 @@ Agent set class_ 0
 ##Agent set class_ 0 now is gone
 # CCLB THIS IS THE SIZE OF OUR PING PACKET CHANGE IT ACCORDINGLY 
 Agent/Ping set packetSize_ 64
-Agent/Raza set packetSize_ 48
+Agent/esdndht set packetSize_ 48
 
 Agent/UDP set packetSize_ 1000
 Agent/UDP instproc done {} { }

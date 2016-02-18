@@ -137,7 +137,7 @@ static const packet_t PT_RAP_ACK = 41;
 static const packet_t PT_TFRC = 42;
 static const packet_t PT_TFRC_ACK = 43;
 static const packet_t PT_PING = 44;
-static const packet_t PT_RAZA = 73;
+static const packet_t PT_esdndht = 73;
 
 static const packet_t PT_PBC = 45;
         // Diffusion packets - Chalermek
@@ -356,7 +356,7 @@ public:
  		name_[PT_TFRC]= "tcpFriend";
 		name_[PT_TFRC_ACK]= "tcpFriendCtl";
 		name_[PT_PING]="ping";
-		name_[PT_RAZA]="raza";
+		name_[PT_esdndht]="esdndht";
 		name_[PT_PBC] = "PBC";
 
 	 	/* For diffusion : Chalermek */

@@ -1,4 +1,4 @@
-/*RAZA
+/*
  * ping.cc
  * Copyright (C) 2000 by the University of Southern California
  * $Id: ping.cc,v 1.8 2005/08/25 18:58:01 johnh Exp $
@@ -50,7 +50,7 @@
  *       network simulator
  * Author: Marc Greis (greis@cs.uni-bonn.de), May 1998
  *
- * IMPORTANT: Incase of any changes made to this file , 
+ * IMPORTANT: Incase of any changes made to this file ,
  * tutorial/examples/ping.cc file (used in Greis' tutorial) should
  * be updated as well.
  */
@@ -62,7 +62,7 @@
 int hdr_ping::offset_;
 static class PingHeaderClass : public PacketHeaderClass {
 public:
-	PingHeaderClass() : PacketHeaderClass("PacketHeader/Ping", 
+	PingHeaderClass() : PacketHeaderClass("PacketHeader/Ping",
 					      sizeof(hdr_ping)) {
 		bind_offset(&hdr_ping::offset_);
 	}
@@ -86,7 +86,7 @@ PingAgent::PingAgent() : Agent(PT_PING), seq(0), oneway(0)
 int PingAgent::command(int argc, const char*const* argv)
 {
   	if(0){
-      
+
       //nsaddr_t my_ard = addr();
       printf("PRINTING ADDRESSES");
       printf("%d\n", here_.addr_);
@@ -99,9 +99,9 @@ int PingAgent::command(int argc, const char*const* argv)
   	linklist_head link = thisnode->linklisthead_;
     LinkHead *lhp = link.lh_first;
     if (lhp!=NULL)
-      printf("THIS IS NULL");
+      printf("PingAgent::commmand::THIS IS NULL");
     //Node * th1 = lhp->node();
-    //printf("%d\n",th1->address_); 
+    //printf("%d\n",th1->address_);
     NsObject* thisObject = thisnode->intf_to_target(0);
 
 
@@ -115,7 +115,7 @@ int PingAgent::command(int argc, const char*const* argv)
     int ra = (((Queue*)(nss))->qlim_);
     //printf ()
     //printf("%d\n",ra);
-  
+
 
      Queue* qq = globalQueue1;
 
@@ -146,7 +146,7 @@ int PingAgent::command(int argc, const char*const* argv)
       // printf("%d\n",stt->agent->here_.port_);
       // printf("%d\n",stt->agent->dst_.addr_);
       // printf("%d\n",stt->agent->dst_.port_);
-      // printf("-------------------------");      
+      // printf("-------------------------");
       stt=stt->next;
     }
     printf("TOTAL AGENTS ARE");
@@ -175,7 +175,7 @@ int PingAgent::command(int argc, const char*const* argv)
       // return TCL_OK, so the calling function knows that
       // the command has been processed
       return (TCL_OK);
-    
+
     }
     else if (strcmp(argv[1], "qlen") == 0) {
       // HP
@@ -241,13 +241,13 @@ int PingAgent::command(int argc, const char*const* argv)
       // the command has been processed
       return (TCL_OK);
     }
-    
+
     else if (strcmp(argv[1], "start-WL-brdcast") == 0) {
       Packet* pkt = allocpkt();
-      
+
       hdr_ip* iph = HDR_IP(pkt);
       hdr_ping* ph = hdr_ping::access(pkt);
-      
+
       iph->daddr() = IP_BROADCAST;
       iph->dport() = iph->sport();
       ph->ret = 0;
@@ -260,7 +260,7 @@ int PingAgent::command(int argc, const char*const* argv)
       return (TCL_OK);
     }
   }
-  
+
   // If the command hasn't been processed by PingAgent()::command,
   // call the command() function for the base class
   return (Agent::command(argc, argv));
@@ -275,7 +275,7 @@ int PingAgent::command(int argc, const char*const* argv)
 
       Packet* pkt = allocpkt();
       hdr_ping* hdr = hdr_ping::access(pkt);
-      hdr->ret = 3; // set intentionally so that receiver knows i have to respond. receiver sets it 4 so i know this is my response. 
+      hdr->ret = 3; // set intentionally so that receiver knows i have to respond. receiver sets it 4 so i know this is my response.
       hdr->seq = seq++;
       hdr->link_num = lN;
       hdr->utilization = -1;
@@ -288,14 +288,14 @@ int PingAgent::command(int argc, const char*const* argv)
   }
 
 /*
-eSDN. called by receiver. 
+eSDN. called by receiver.
 */
 
 void PingAgent::updateStats(hdr_ping* hdr){
  // cout << "MY NUMBER IS " << addr() <<endl;
   int link_num = hdr->link_num;
   // do the mapping of the link with the auxilary data structure
-  // to get the queue array number 
+  // to get the queue array number
   //cout << "Raza wants big L = " << link_num << endl;
   GlobalQueue* gQ = global_q_head;
   //find the relevant queue here
@@ -312,7 +312,7 @@ void PingAgent::updateStats(hdr_ping* hdr){
     //printf("IN NUM FLOWS\n");
     return;
   }
-    
+
    if (hdr->statDemanded==UTILIZATION) {
     hdr->utilization = gQ->que->cur_util_;
     return;
@@ -331,32 +331,32 @@ void PingAgent::recv(Packet* pkt, Handler*)
 {
   // Access the IP header for the received packet:
   hdr_ip* hdrip = hdr_ip::access(pkt);
-  
+
   // Access the Ping header for the received packet:
   hdr_ping* hdr = hdr_ping::access(pkt);
-  
+
 
   // check if in brdcast mode
   if ((u_int32_t)hdrip->daddr() == IP_BROADCAST) {
     if (hdr->ret == 0) {
-      
+
       printf("Recv BRDCAST Ping REQ : at %d.%d from %d.%d\n", here_.addr_, here_.port_, hdrip->saddr(), hdrip->sport());
       Packet::free(pkt);
-      
+
       // create reply
       Packet* pktret = allocpkt();
 
       hdr_ping* hdrret = hdr_ping::access(pktret);
       hdr_ip* ipret = hdr_ip::access(pktret);
-      
+
       hdrret->ret = 1;
-      
+
       // add brdcast address
       ipret->daddr() = IP_BROADCAST;
       ipret->dport() = ipret->sport();
 
       send(pktret, 0);
-    
+
     } else {
       printf("Recv BRDCAST Ping REPLY : at %d.%d from %d.%d\n", here_.addr_, here_.port_, hdrip->saddr(), hdrip->sport());
       Packet::free(pkt);
@@ -366,7 +366,7 @@ void PingAgent::recv(Packet* pkt, Handler*)
   // Is the 'ret' field = 0 (i.e. the receiving node is being pinged)?
 
   //eSDN
-  if (hdr->ret == 3) { 
+  if (hdr->ret == 3) {
     // Send an 'echo'. First save the old packet's send_time
 
 //    cout<<"Agent PING is called from "<< dst_.addr_ << " to " <<  here_.addr_<< " for link " << hdr->link_num << " with status " <<endl;
@@ -380,7 +380,7 @@ void PingAgent::recv(Packet* pkt, Handler*)
     //cout << "n = " << n << endl;
     int stat_dem = hdr->statDemanded;
     Packet::free(pkt);
-    
+
     // Create a new packet
     Packet* pktret = allocpkt();
     // Access the Ping header for the new packet:
@@ -395,15 +395,15 @@ void PingAgent::recv(Packet* pkt, Handler*)
     hdrret->send_time = stime;
     // Added by Andrei Gurtov for one-way delay measurement.
     hdrret->rcv_time = Scheduler::instance().clock();
-    hdrret->seq = rcv_seq; // 
+    hdrret->seq = rcv_seq; //
     // Send the packet
-    send(pktret, 0); // sent back. 
-  } else if(hdr->ret == 4) { //response of the poll query. 
+    send(pktret, 0); // sent back.
+  } else if(hdr->ret == 4) { //response of the poll query.
 
   	Node* me = Node::get_node_by_address(addr());
     if (hdr->statDemanded == NUMFLOWS)
-  	 me->topo_links[hdr->link_num].stats.setStats_Num(hdr->utilization,hdr->q_lim,hdr->no_flows); // topolinks has link objects. 
-  	else if (hdr->statDemanded == QLEN) // not correct atm. 
+  	 me->topo_links[hdr->link_num].stats.setStats_Num(hdr->utilization,hdr->q_lim,hdr->no_flows); // topolinks has link objects.
+  	else if (hdr->statDemanded == QLEN) // not correct atm.
      me->topo_links[hdr->link_num].stats.setStats_Queue(hdr->utilization,hdr->q_lim,hdr->q_len);
 
 
@@ -439,11 +439,11 @@ void PingAgent::recv(Packet* pkt, Handler*)
     char out[100];
 
     if (oneway) //AG
-      	sprintf(out, "%s recv %d %d %3.1f %3.1f", name(), 
+      	sprintf(out, "%s recv %d %d %3.1f %3.1f", name(),
 	    hdrip->src_.addr_ >> Address::instance().NodeShift_[1],
 	    hdr->seq, (hdr->rcv_time - hdr->send_time) * 1000,
 	    (Scheduler::instance().clock()-hdr->rcv_time) * 1000);
-    else sprintf(out, "%s recv %d %3.1f", name(), 
+    else sprintf(out, "%s recv %d %3.1f", name(),
 	    hdrip->src_.addr_ >> Address::instance().NodeShift_[1],
 	    (Scheduler::instance().clock()-hdr->send_time) * 1000);
     Tcl& tcl = Tcl::instance();

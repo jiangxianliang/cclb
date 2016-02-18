@@ -3429,7 +3429,7 @@ DCCP_CLOSE      # DCCP, transport protocol\n\
 DCCP_CLOSEREQ   # DCCP, transport protocol\n\
 Message # a protocol to carry text messages\n\
 Ping 	# Ping\n\
-Raza	# Raza\n\
+esdndht	# esdndht\n\
 PBC     # PBC\n\
 ARP 	# Address Resolution Protocol, network wireless stack\n\
 GAF 	# Geographic Adaptive Delity, for ad-hoc networks\n\
@@ -19486,7 +19486,7 @@ Agent set debug_ false\n\
 Agent set class_ 0\n\
 \n\
 Agent/Ping set packetSize_ 64\n\
-Agent/Raza set packetSize_ 48\n\
+Agent/esdndht set packetSize_ 48\n\
 \n\
 Agent/UDP set packetSize_ 1000\n\
 Agent/UDP instproc done {} { }\n\

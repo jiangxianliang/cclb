@@ -1,6 +1,5 @@
-
 /*
- * ping.h
+ * eSDN DHT AGENT
  * Copyright (C) 2000 by the University of Southern California
  * $Id: ping.h,v 1.5 2005/08/25 18:58:01 johnh Exp $
  *
@@ -58,8 +57,8 @@
  */
 
 
-#ifndef ns_raza_h
-#define ns_raza_h
+#ifndef ns_esdndht_h
+#define ns_esdndht_h
 
 #include "agent.h"
 #include "tclcl.h"
@@ -79,7 +78,7 @@
 /*
 eSDN
 */
-struct hdr_raza {
+struct hdr_esdndht {
 	char ret;
 	double send_time;
  	double rcv_time;	// when ping arrived to receiver
@@ -87,23 +86,23 @@ struct hdr_raza {
  	int link_num;
 	double utilization;
 	int no_flows;
-	int statDemanded; 
+	int statDemanded;
 	double q_len;
 	int start;
 	double q_lim;
-	
+
 
 	// Header access methods
 	static int offset_; // required by PacketHeaderManager
 	inline static int& offset() { return offset_; }
-	inline static hdr_raza* access(const Packet* p) {
-		return (hdr_raza*) p->access(offset_);
+	inline static hdr_esdndht* access(const Packet* p) {
+		return (hdr_esdndht*) p->access(offset_);
 	}
 };
 
-class RazaAgent : public Agent {
+class esdndhtAgent : public Agent {
 public:
-	RazaAgent();
+	esdndhtAgent();
 
  	int seq;	// a send sequence number like in real ping
 	int oneway; 	// enable seq number and one-way delay printouts
@@ -114,4 +113,4 @@ public:
 
 };
 
-#endif // ns_raza_h
+#endif // ns_esdndht_h

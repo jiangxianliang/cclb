@@ -51,45 +51,45 @@
  *       network simulator
  * Author: Marc Greis (greis@cs.uni-bonn.de), May 1998
  *
- * IMPORTANT: Incase of any changes made to this file , 
+ * IMPORTANT: Incase of any changes made to this file ,
  * tutorial/examples/ping.cc file (used in Greis' tutorial) should
  * be updated as well.
  */
 
-#include "raza.h"
+#include "esdndht.h"
 
-int hdr_raza::offset_;
-static class RazaHeaderClass : public PacketHeaderClass {
+int hdr_esdndht::offset_;
+static class esdndhtHeaderClass : public PacketHeaderClass {
 public:
-	RazaHeaderClass() : PacketHeaderClass("PacketHeader/Raza", 
-					      sizeof(hdr_raza)) {
-		bind_offset(&hdr_raza::offset_);
+	esdndhtHeaderClass() : PacketHeaderClass("PacketHeader/esdndht",
+					      sizeof(hdr_esdndht)) {
+		bind_offset(&hdr_esdndht::offset_);
 	}
-} class_razahdr;
+} class_esdndht;
 
 
-static class RazaClass : public TclClass {
+static class esdndhtClass : public TclClass {
 public:
-	RazaClass() : TclClass("Agent/Raza") {}
+	esdndhtClass() : TclClass("Agent/esdndht") {}
 	TclObject* create(int, const char*const*) {
-		return (new RazaAgent());
+		return (new esdndhtAgent());
 	}
-} class_raza;
+} class_esdndht;
 
 
-RazaAgent::RazaAgent() : Agent(PT_RAZA), seq(0), oneway(0)
+esdndhtAgent::esdndhtAgent() : Agent(PT_esdndht), seq(0), oneway(0)
 {
 	bind("packetSize_", &size_);
 }
 
-int RazaAgent::command(int argc, const char*const* argv)
+int esdndhtAgent::command(int argc, const char*const* argv)
 {
   if (argc == 2) {
     if (strcmp(argv[1], "send") == 0) {
       // Create a new packet
       Packet* pkt = allocpkt();
       // Access the Ping header for the new packet:
-      hdr_raza* hdr = hdr_raza::access(pkt);
+      hdr_esdndht* hdr = hdr_esdndht::access(pkt);
       // Set the 'ret' field to 0, so the receiving node
       // knows that it has to generate an echo packet
       hdr->ret = 0;
@@ -101,15 +101,15 @@ int RazaAgent::command(int argc, const char*const* argv)
       // return TCL_OK, so the calling function knows that
       // the command has been processed
       return (TCL_OK);
-    
+
     }
-    
+
     else if (strcmp(argv[1], "start-WL-brdcast") == 0) {
       Packet* pkt = allocpkt();
-      
+
       hdr_ip* iph = HDR_IP(pkt);
-      hdr_raza* ph = hdr_raza::access(pkt);
-      
+      hdr_esdndht* ph = hdr_esdndht::access(pkt);
+
       iph->daddr() = IP_BROADCAST;
       iph->dport() = iph->sport();
       ph->ret = 0;
@@ -122,43 +122,43 @@ int RazaAgent::command(int argc, const char*const* argv)
       return (TCL_OK);
     }
   }
-  
+
   // If the command hasn't been processed by PingAgent()::command,
   // call the command() function for the base class
   return (Agent::command(argc, argv));
 }
 
 
-void RazaAgent::recv(Packet* pkt, Handler*)
+void esdndhtAgent::recv(Packet* pkt, Handler*)
 {
   // Access the IP header for the received packet:
   hdr_ip* hdrip = hdr_ip::access(pkt);
-  
+
   // Access the Ping header for the received packet:
-  hdr_raza* hdr = hdr_raza::access(pkt);
-  
+  hdr_esdndht* hdr = hdr_esdndht::access(pkt);
+
 
   // check if in brdcast mode
   if ((u_int32_t)hdrip->daddr() == IP_BROADCAST) {
     if (hdr->ret == 0) {
-      
+
       printf("Recv BRDCAST Ping REQ : at %d.%d from %d.%d\n", here_.addr_, here_.port_, hdrip->saddr(), hdrip->sport());
       Packet::free(pkt);
-      
+
       // create reply
       Packet* pktret = allocpkt();
 
-      hdr_raza* hdrret = hdr_raza::access(pktret);
+      hdr_esdndht* hdrret = hdr_esdndht::access(pktret);
       hdr_ip* ipret = hdr_ip::access(pktret);
-      
+
       hdrret->ret = 1;
-      
+
       // add brdcast address
       ipret->daddr() = IP_BROADCAST;
       ipret->dport() = ipret->sport();
 
       send(pktret, 0);
-    
+
     } else {
       printf("Recv BRDCAST Ping REPLY : at %d.%d from %d.%d\n", here_.addr_, here_.port_, hdrip->saddr(), hdrip->sport());
       Packet::free(pkt);
@@ -175,7 +175,7 @@ void RazaAgent::recv(Packet* pkt, Handler*)
     // Create a new packet
     Packet* pktret = allocpkt();
     // Access the Ping header for the new packet:
-    hdr_raza* hdrret = hdr_raza::access(pktret);
+    hdr_esdndht* hdrret = hdr_esdndht::access(pktret);
     // Set the 'ret' field to 1, so the receiver won't send
     // another echo
     hdrret->ret = 1;
@@ -196,11 +196,11 @@ void RazaAgent::recv(Packet* pkt, Handler*)
     // Prepare the output to the Tcl interpreter. Calculate the
     // round trip time
     if (oneway) //AG
-      	sprintf(out, "%s recv %d %d %3.1f %3.1f", name(), 
+      	sprintf(out, "%s recv %d %d %3.1f %3.1f", name(),
 	    hdrip->src_.addr_ >> Address::instance().NodeShift_[1],
 	    hdr->seq, (hdr->rcv_time - hdr->send_time) * 1000,
 	    (Scheduler::instance().clock()-hdr->rcv_time) * 1000);
-    else sprintf(out, "%s recv %d %3.1f", name(), 
+    else sprintf(out, "%s recv %d %3.1f", name(),
 	    hdrip->src_.addr_ >> Address::instance().NodeShift_[1],
 	    (Scheduler::instance().clock()-hdr->send_time) * 1000);
     Tcl& tcl = Tcl::instance();

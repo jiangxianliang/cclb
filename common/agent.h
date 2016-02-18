@@ -102,8 +102,8 @@ class Agent : public Connector {
 			    nsaddr_t dst);
 	virtual void sendto(int sz, AppData*, const char* flags,
 			    ns_addr_t dst);
-	virtual void send_c(int,int){ printf("Raza send_c() wrong caller 1"); }
-	virtual void send_c(int,int,int){ printf("Raza2 send_c2() wrong caller 2"); }
+	virtual void send_c(int,int){ printf("esdndht send_c() wrong caller 1"); }
+	virtual void send_c(int,int,int){ printf("esdndht send_c2() wrong caller 2"); }
 
 
 	virtual void sendmsg(int nbytes, const char *flags = 0);
