@@ -1164,11 +1164,10 @@ void TcpAgent::print_pathway() {
                         pathway_link* link_head = it->second->links;
                         printf("link_ids::\n");
                         while (link_head){
-//                            printf(" %d,",link_head->link_id);
+                            //    printf(" %d,",link_head->link_id);
                             install_path(link_head->link_id);
                             link_head = link_head->next;
                         }
-
                         printf("\n");
                     }
                 }
@@ -1177,7 +1176,7 @@ void TcpAgent::print_pathway() {
     } else {
         printf("pathway global is NULl\n");
     }
-    printf("-----------------------------------------------------------XXXXXXXXXXXXXXXXXx\n");
+    printf("---------------------------------------------------------------\n");
     return;
 }
 
