@@ -1040,7 +1040,7 @@ int TcpAgent::command(int argc, const char*const* argv)
             //     install_path();
             //cout<<"IN FLOW START FUNCTION"<<endl;
             incrementFlows();
-            if(DHT12)
+            if(isDHTEnabled)
             {
                 init_DHT(1);
             }
@@ -1053,7 +1053,7 @@ int TcpAgent::command(int argc, const char*const* argv)
             // me->num_flow--;
             cwnd_ = 0;
             decrementFlows();
-            if (DHT12){
+            if (isDHTEnabled) {
                 init_DHT(0);
             }
             poll_off = 1;
@@ -1138,11 +1138,11 @@ int TcpAgent::command(int argc, const char*const* argv)
 
 void TcpAgent::send_one_packet()
 {
-printf("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
+printf("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
 // send packet with 0 seqno and 0 reason
 printf("sending initial packet\n");
 output(0,0);
-printf("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
+printf("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
 return;
 }
 
@@ -1547,50 +1547,63 @@ void TcpAgent::request_stats(int link, int start, int node, int status){
 // each flow calls it exactly twice.
 void TcpAgent::init_DHT( int status){   // status = 1 mean start, 0 mean end
     int hosts = HOST_PER_RACK; // change in tcp.h when k changes in fattree generator.
+
     int start_node = -1;
     int end_node = -1;
 
     if (addr() < hosts)
+    {
         start_node = 0;
+    }
     else
     {
         start_node = addr() - (addr()%hosts);
-
     }
-    end_node = start_node+hosts-1;
-    cout<<"THE START AND END OF MY RACK IS "<<start_node<<"   "<<end_node<<endl;
-    Flow_path *fp = flow_path->next;
-    int link_num = -1;
-    Node *me = Node::get_node_by_address(addr());
-    while(fp->next!=NULL){
 
-        for (int i=0;i<me->topo_links.size();i++){
+    end_node = start_node + hosts - 1;
+
+    std::cout << "init_dht:: THE START AND END OF MY RACK IS " << start_node << "   " << end_node << endl;
+
+    Flow_path *fp = flow_path->next;
+
+    if (fp == NULL)
+    {
+	std::cout << "init_DHT:: WARNING:: segfault will occur :: fp is NULL!" << "\n";
+    }
+
+    int link_num = -1;
+
+    Node *me = Node::get_node_by_address(addr());
+
+    while(fp->next!=NULL) {
+        for (int i=0; i < me->topo_links.size(); i++) {
             if (me->topo_links[i].n_start == fp->node && me->topo_links[i].n_end == fp->next->node){
                 link_num = me->topo_links[i].link_num;
                 break;
             }
         }
 
-        for (int i=0;i<me->fixed_mappings.size();i++) {
-            if (me->fixed_mappings[i].address>=start_node && me->fixed_mappings[i].address<=end_node){
-                for (int j=0;j<me->fixed_mappings[i].fixed_links.size();j++){
-                    if(me->fixed_mappings[i].fixed_links[j].link_num == link_num){
+        for (int i=0; i < me->fixed_mappings.size(); i++) {
+            if (me->fixed_mappings[i].address  >= start_node && me->fixed_mappings[i].address <= end_node) {
+                for (int j=0; j < me->fixed_mappings[i].fixed_links.size(); j++) {
+                    if (me->fixed_mappings[i].fixed_links[j].link_num == link_num) {
+			// for self managing links
+                        if (me->fixed_mappings[i].address == addr()) {
+			    std::cout << "I HAVE LINK "<< link_num << std::endl;
 
-                       // for self managing links
-                        if(me->fixed_mappings[i].address == addr()){
-                            cout<<"I HAVE LINK "<<link_num<<endl;
                             for (int k=0;k<me->fixed_mappings[i].fixed_links[j].node_count.size();k++){
                                 if(me->fixed_mappings[i].fixed_links[j].node_count[k].node==addr()){
                                     if (status == 1) {
                                         me->fixed_mappings[i].fixed_links[j].node_count[k].count++;
                                         break;
                                     }
-                                    else if(status == 0 ){
+                                    else if (status == 0) {
                                         me->fixed_mappings[i].fixed_links[j].node_count[k].count--;
                                         break;
                                     }
                                 }
                             }
+
                             Node_count nc;
                             nc.node = addr();
                             nc.count = 1;
@@ -1598,7 +1611,7 @@ void TcpAgent::init_DHT( int status){   // status = 1 mean start, 0 mean end
                         }
                         else // till here
                         {
-                            cout<<"REQUESTING " <<me->fixed_mappings[i].address<<" about link "<<link_num<<endl;
+			    std::cout << "REQUESTING " << me->fixed_mappings[i].address <<" about link " << link_num << std::endl;
                             request_stats(link_num,fp->node,me->fixed_mappings[i].address,status);
                         }
                     }
@@ -1609,10 +1622,6 @@ void TcpAgent::init_DHT( int status){   // status = 1 mean start, 0 mean end
         fp=fp->next;
     }
 }
-
-
-
-
 
 
 void TcpAgent::poll_per(){
@@ -1762,6 +1771,7 @@ void TcpAgent::poll_dht() {
             rate = me->topo_links[i].capacity*1000000000/ll;
         }
     }
+
     double rate2;
     while (fp->next!=NULL){
         for (int i=0;i<me->topo_links.size();i++){

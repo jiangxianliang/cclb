@@ -1,4 +1,4 @@
-eSDN: Per rack share
+eSDN: per rack share branch
 ================================================
 
 This respository contains the ns-2.35 code for endhost data center controllers.
@@ -35,3 +35,7 @@ polling*
   sharing DHT and are read from node.cc file.
 
 Run out.tcl from ns to get the experiment going.
+
+TODO
+========
+- FIX DHT STOP BUG

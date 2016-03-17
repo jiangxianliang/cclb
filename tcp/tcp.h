@@ -60,7 +60,7 @@ struct hdr_tcp {
 	int reason_;            /* reason for a retransmit */
 	int sack_area_[NSA+1][2];	/* sack blocks: start, end of block */
 	int sa_length_;         /* Indicate the number of SACKs in this  *
-	                         * packet.  Adds 2+sack_length*8 bytes   */ 
+	                         * packet.  Adds 2+sack_length*8 bytes   */
 	int ackno_;             /* ACK number for FullTcp */
 	int hlen_;              /* header len (bytes) for FullTcp */
 	int tcp_flags_;         /* TCP flags for FullTcp */
@@ -82,7 +82,7 @@ struct hdr_tcp {
 	int& sa_right(int n) { return (sack_area_[n][1]); }
 	int& sa_length() { return (sa_length_); }
 	int& hlen() { return (hlen_); }
-	int& ackno() { return (ackno_); }  
+	int& ackno() { return (ackno_); }
 	int& flags() { return (tcp_flags_); }
 	int& last_rtt() { return (last_rtt_); }
 };
@@ -93,10 +93,11 @@ struct hdr_tcp {
 #define	TCP_REASON_RBP		0x03   // used only in tcp-rbp.cc
 #define TCP_REASON_PARTIALACK   0x04
 
-// eSDN DHT DEFINES xxxxxxxxxxxxxxxxx
-#define DHT12 1
+// UPDATE_ON_CHANGE :: eSDN DHT DEFINES xxxxxxxxxxxxxxxxx
+// is DHT enabled
+#define isDHTEnabled 1
 #define HOST_PER_RACK 2
-#define HOST_PER_POD 4 // do it in terms of k. 
+#define HOST_PER_POD 4 // do it in terms of k.
 //xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 /* these are reasons we adjusted our congestion window */
@@ -131,7 +132,7 @@ struct hdr_tcp {
 /*
  * tcp_tick_:
  * default 0.1,
- * 0.3 for 4.3 BSD, 
+ * 0.3 for 4.3 BSD,
  * 0.01 for new window algorithms,
  */
 
@@ -145,12 +146,12 @@ struct hdr_tcp {
 #define TCP_TIMER_BURSTSND	2
 #define TCP_TIMER_DELACK	3
 #define TCP_TIMER_Q         4
-#define TCP_TIMER_RESET        5 
+#define TCP_TIMER_RESET        5
 
 class TcpAgent;
 
 class RtxTimer : public TimerHandler {
-public: 
+public:
 	RtxTimer(TcpAgent *a) : TimerHandler() { a_ = a; }
 protected:
 	virtual void expire(Event *e);
@@ -158,7 +159,7 @@ protected:
 };
 
 class DelSndTimer : public TimerHandler {
-public: 
+public:
 	DelSndTimer(TcpAgent *a) : TimerHandler() { a_ = a; }
 protected:
 	virtual void expire(Event *e);
@@ -166,7 +167,7 @@ protected:
 };
 
 class BurstSndTimer : public TimerHandler {
-public: 
+public:
 	BurstSndTimer(TcpAgent *a) : TimerHandler() { a_ = a; }
 protected:
 	virtual void expire(Event *e);
@@ -199,7 +200,7 @@ struct hstcp {
 //     {
 //        //printf("Razia's timer\n");
 //     }
-//     virtual void expire (Event *e);  
+//     virtual void expire (Event *e);
 // };
 
 
@@ -208,20 +209,20 @@ class TcpAgent : public Agent,public TimerHandler {
 public:
 	 // custom code
 	int idenfifier;
-	// end custom code	
+	// end custom code
 	TcpAgent();
 //	PollTimer poll;
 	Flow_path* flow_path;
 	//vector<int> f_path;
 	virtual void send_one_packet(); // CUSTOM sends one packet
-	virtual void print_pathway(); // CUSTOM prints the pathway in the gloabl pathway object	
+	virtual void print_pathway(); // CUSTOM prints the pathway in the gloabl pathway object
 	virtual void expire (Event *e);
 	void incrementFlows();
 	void install_path(int point);
 	void increment2(int a);
 	void decrementFlows();
-	void decrement2(int a);	
-	void every_link_poll();    
+	void decrement2(int a);
+	void every_link_poll();
 	void fetch_stats(int start, int end);	// link between start and end node
 	void update_edge(int start, int end);
 	int poll_off;
@@ -252,7 +253,7 @@ public:
 	double getRate();
 	int flow_count();	//RAZA FRIDAY
 	/* These two functions aid Tmix one-way TCP agents */
-	int is_closed() {return closed_;} 
+	int is_closed() {return closed_;}
 	void clr_closed() {closed_ = 0;}
 protected:
 	virtual int window();
@@ -341,7 +342,7 @@ protected:
 	#define T_RTT_BITS 0
 	int T_SRTT_BITS;        /* exponent of weight for updating t_srtt_ */
 	int srtt_init_;		/* initial value for computing t_srtt_ */
-	int T_RTTVAR_BITS;      /* exponent of weight for updating t_rttvar_ */ 
+	int T_RTTVAR_BITS;      /* exponent of weight for updating t_rttvar_ */
 	int rttvar_exp_;        /* exponent of multiple for t_rtxcur_ */
 	int rttvar_init_;       /* initial value for computing t_rttvar_ */
 	double t_rtxcur_;	/* current retransmit value */
@@ -401,7 +402,7 @@ protected:
 	int timerfix_;		/* set to true to update timer *after* */
 				/* update the RTT, instead of before   */
 	int rfc2988_;		/* Use updated RFC 2988 timers */
-	/* End of timers. */ 
+	/* End of timers. */
 
 
 	/* For modeling SYN and SYN/ACK packets. */
@@ -421,11 +422,11 @@ protected:
 	int spurious_response_;	/* Response variant to spurious RTO */
 	/* End of R-RTO */
 
-	/* Parameters for backwards compatility with old code. */ 
+	/* Parameters for backwards compatility with old code. */
 	int bug_fix_;		/* 1 for multiple-fast-retransmit fix */
 	int less_careful_;	/* 1 for Less Careful variant of bug_fix_, */
 				/*  for illustration only  */
-	int exitFastRetrans_;	/* True to clean exits of Fast Retransmit */ 
+	int exitFastRetrans_;	/* True to clean exits of Fast Retransmit */
 				/* False for buggy old behavior */
 	int bugfix_ack_;        // 1 to enable ACK heuristic, to allow
 				//  multiple-fast-retransmits in special cases.
@@ -434,10 +435,10 @@ protected:
 				//  multiple-fast-retransmits in special cases.
 				// From Andrei Gurtov
 				// Not implemented yet.
-	int old_ecn_;		/* For backwards compatibility with the 
+	int old_ecn_;		/* For backwards compatibility with the
 				 * old ECN implementation, which never
 				 * reduced the congestion window below
-				 * one packet. */ 
+				 * one packet. */
 	int bugfix_ss_;		// 1 to use window of one when SYN
 				//  packet is dropped
 	/* End of parameters for backwards compatility. */
@@ -462,31 +463,31 @@ protected:
 
 	/* Dynamic state only used for monitoring */
 	int trace_all_oneline_;	/* TCP tracing vars all in one line or not? */
-	int nam_tracevar_;      /* Output nam's variable trace or just plain 
+	int nam_tracevar_;      /* Output nam's variable trace or just plain
 				   text variable trace? */
         TracedInt ndatapack_;   /* number of data packets sent */
         TracedInt ndatabytes_;  /* number of data bytes sent */
         TracedInt nackpack_;    /* number of ack packets received */
-        TracedInt nrexmit_;     /* number of retransmit timeouts 
+        TracedInt nrexmit_;     /* number of retransmit timeouts
 				   when there was data outstanding */
         TracedInt nrexmitpack_; /* number of retransmited packets */
         TracedInt nrexmitbytes_; /* number of retransmited bytes */
         TracedInt necnresponses_; /* number of times cwnd was reduced
 			   	   in response to an ecn packet -- sylvia */
-        TracedInt ncwndcuts_; 	/* number of times cwnd was reduced 
+        TracedInt ncwndcuts_; 	/* number of times cwnd was reduced
 				   for any reason -- sylvia */
-        TracedInt ncwndcuts1_;     /* number of times cwnd was reduced 
+        TracedInt ncwndcuts1_;     /* number of times cwnd was reduced
                                    due to congestion (as opposed to idle
                                    periods */
 	/* end of dynamic state for monitoring */
 
 	/* Specifying variants in TCP algorithms.  */
-	int slow_start_restart_; /* boolean: re-init cwnd after connection 
+	int slow_start_restart_; /* boolean: re-init cwnd after connection
 				    goes idle.  On by default. */
 	int restart_bugfix_;    /* ssthresh is cut down because of
 				   timeouts during a connection's idle period.
 				   Setting this boolean fixes this problem.
-				   For now, it is off by default. */ 
+				   For now, it is off by default. */
         TracedInt singledup_;   /* Send on a single dup ack.  */
 	int LimTransmitFix_;	/* To fix a bug in Limited Transmit. */
 	int noFastRetrans_;	/* No Fast Retransmit option.  */
@@ -533,7 +534,7 @@ protected:
 	/* The next parameter is for Limited Slow-Start. */
 	int max_ssthresh_;	/* max value for ssthresh_ */
 
-	/* These two functions are just an easy structuring of the code. */ 
+	/* These two functions are just an easy structuring of the code. */
 	double increase_param();  /* get increase parameter for current cwnd */
 	double decrease_param();  /* get decrease parameter for current cwnd */
 	int cwnd_range_;	/* for determining when to recompute params. */
@@ -581,7 +582,7 @@ protected:
 	/* these function are now obsolete, see other above */
 	void closecwnd(int how);
 	void quench(int how);
-        
+
 	/* TCP quiescence, reducing cwnd after an idle period */
 	void process_qoption_after_send() ;
 	void process_qoption_after_ack(int seqno) ;
@@ -597,9 +598,9 @@ protected:
 	int RTT_prev ;
 	int RTT_goodcount ;
 	int F_counting ;
-	int W_used ; 
+	int W_used ;
 	int W_timed ;
-	int F_full ; 
+	int F_full ;
 	int Backoffs ;
 	int control_increase_ ; /* If true, don't increase cwnd if sender */
 				/*  is not window-limited.  */
@@ -639,7 +640,7 @@ class NewRenoTcpAgent : public virtual RenoTcpAgent {
 	int newreno_changes1_;  /* Newreno_changes1_ set to 0 gives the */
 				/* Slow-but-Steady variant of NewReno from */
 				/* RFC 2582, with the retransmit timer reset */
-				/* after each partial new ack. */  
+				/* after each partial new ack. */
 				/* Newreno_changes1_ set to 1 gives the */
 				/* Impatient variant of NewReno from */
 				/* RFC 2582, with the retransmit timer reset */
@@ -649,7 +650,7 @@ class NewRenoTcpAgent : public virtual RenoTcpAgent {
 	int allow_fast_retransmit(int last_cwnd_action_);
 	int acked_, new_ssthresh_;  /* used if newreno_changes_ == 1 */
 	double ack2_, ack3_, basertt_; /* used if newreno_changes_ == 1 */
-	int firstpartial_; 	/* For the first partial ACK. */ 
+	int firstpartial_; 	/* For the first partial ACK. */
 	int partial_window_deflation_; /* 0 if set cwnd to ssthresh upon */
 				       /* partial new ack (default) */
 				       /* 1 if deflate (cwnd + dupwnd) by */
@@ -675,7 +676,7 @@ protected:
 	}
 	virtual void output(int seqno, int reason = 0);
 	virtual void recv_newack_helper(Packet*);
-	int vegas_expire(Packet*); 
+	int vegas_expire(Packet*);
 	void reset();
 	void vegas_inflate_cwnd(int win, double current_time);
 
@@ -686,7 +687,7 @@ protected:
 	double firstrecv_;	// time recv the 1st ack
 
 	int    v_alpha_;    	// vegas thruput thresholds in pkts
-	int    v_beta_;  	    	
+	int    v_beta_;
 
 	int    v_gamma_;    	// threshold to change from slow-start to
 				// congestion avoidance, in pkts
@@ -695,9 +696,9 @@ protected:
 	int    v_worried_;      // # of pkts to chk after dup ack (1 or 2)
 
 	double v_timeout_;      // based on fine-grained timer
-	double v_rtt_;		
-	double v_sa_;		
-	double v_sd_;	
+	double v_rtt_;
+	double v_sa_;
+	double v_sd_;
 
 	int    v_cntRTT_;       // # of rtt measured within one rtt
 	double v_sumRTT_;       // sum of rtt measured within one rtt
