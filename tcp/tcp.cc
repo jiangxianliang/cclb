@@ -1,40 +1,40 @@
 /* -*-  Mode:C++; c-basic-offset:8; tab-width:8; indent-tabs-mode:t -*- */
 /*
- * Copyright (c) 1991-1997 Regents of the University of California.
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *  This product includes software developed by the Computer Systems
- *  Engineering Group at Lawrence Berkeley Laboratory.
- * 4. Neither the name of the University nor of the Laboratory may be used
- *    to endorse or promote products derived from this software without
- *    specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
- */
+* Copyright (c) 1991-1997 Regents of the University of California.
+* All rights reserved.
+*
+* Redistribution and use in source and binary forms, with or without
+* modification, are permitted provided that the following conditions
+* are met:
+* 1. Redistributions of source code must retain the above copyright
+*    notice, this list of conditions and the following disclaimer.
+* 2. Redistributions in binary form must reproduce the above copyright
+*    notice, this list of conditions and the following disclaimer in the
+*    documentation and/or other materials provided with the distribution.
+* 3. All advertising materials mentioning features or use of this software
+*    must display the following acknowledgement:
+*  This product includes software developed by the Computer Systems
+*  Engineering Group at Lawrence Berkeley Laboratory.
+* 4. Neither the name of the University nor of the Laboratory may be used
+*    to endorse or promote products derived from this software without
+*    specific prior written permission.
+*
+* THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+* ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+* IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+* ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+* FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+* DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+* OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+* LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+* OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+* SUCH DAMAGE.
+*/
 
 #ifndef lint
 static const char rcsid[] =
-    "@(#) $Header: /cvsroot/nsnam/ns-2/tcp/tcp.cc,v 1.182 2011/06/20 04:51:46 tom_henderson Exp $ (LBL)";
+"@(#) $Header: /cvsroot/nsnam/ns-2/tcp/tcp.cc,v 1.182 2011/06/20 04:51:46 tom_henderson Exp $ (LBL)";
 #endif
 
 #include <stdlib.h>
@@ -52,167 +52,167 @@ static const char rcsid[] =
 #include "hdr_qs.h"
 #include <map>
 #include  "node.h"
-    #include <iostream>
-    using namespace std;
+#include <iostream>
+using namespace std;
 
 int hdr_tcp::offset_;
 
 //declare them here to avoid the undefined method error
 bool compare_strings_(char* x, char *y) {
-    for (int i =0; i < 67; i++) {
-        if (x[i] != y[i]) {
-            //cout<<"FALSE"<<endl;
-            return false;
-        }
+for (int i =0; i < 67; i++) {
+    if (x[i] != y[i]) {
+	//cout<<"FALSE"<<endl;
+	return false;
     }
-    //cout<<"TRUE"<<endl;
-    return true;
+}
+//cout<<"TRUE"<<endl;
+return true;
 }
 
 // Converts teh int to char and concats
 char* concat_(int src, int src_prt, int dst, int dst_prt)
 {
-    char* arr = new char[67];
+char* arr = new char[67];
 // init array
-    for (int i = 0; i < 67; ++i)
-    {
-        arr[i] = 0;
-    }
+for (int i = 0; i < 67; ++i)
+{
+    arr[i] = 0;
+}
 // put int
-    arr[0] = src;
-    arr[16] = src_prt;
-    arr[33] = dst; // sameed problem must be 32
-    arr[50] = dst_prt;  // must be 48
-    return arr;
+arr[0] = src;
+arr[16] = src_prt;
+arr[33] = dst; // sameed problem must be 32
+arr[50] = dst_prt;  // must be 48
+return arr;
 }
 
 
 static class TCPHeaderClass : public PacketHeaderClass {
 public:
-        TCPHeaderClass() : PacketHeaderClass("PacketHeader/TCP",
-                         sizeof(hdr_tcp)) {
-        bind_offset(&hdr_tcp::offset_);
-    }
+    TCPHeaderClass() : PacketHeaderClass("PacketHeader/TCP",
+			sizeof(hdr_tcp)) {
+    bind_offset(&hdr_tcp::offset_);
+}
 } class_tcphdr;
 
 static class TcpClass : public TclClass {
 public:
-    TcpClass() : TclClass("Agent/TCP") {}
-    TclObject* create(int , const char*const*) {
-        return (new TcpAgent());
-    }
+TcpClass() : TclClass("Agent/TCP") {}
+TclObject* create(int , const char*const*) {
+    return (new TcpAgent());
+}
 } class_tcp;
 
 
 void TcpAgent::install_path(int point){
-    //cout<<"in install_path"<<endl;
-    Node *me = Node::get_node_by_address(addr());
+//cout<<"in install_path"<<endl;
+Node *me = Node::get_node_by_address(addr());
 
-    if (flow_path == NULL){
-        Flow_path* fp = new Flow_path;
-        fp->node = me->topo_links[point].n_start;
-        fp->next = NULL;
-        flow_path = fp;
-        cout<<fp->node<<"   ";
-    }
-    Flow_path* ff = new Flow_path;
-    ff->node = me->topo_links[point].n_end;
-    ff->next = NULL;
-    Flow_path* pp = flow_path;
-    cout<<" "<<ff->node;
-    while(pp->next!=NULL){
-        pp=pp->next;
-    }
-    pp->next = ff;
+if (flow_path == NULL){
+    Flow_path* fp = new Flow_path;
+    fp->node = me->topo_links[point].n_start;
+    fp->next = NULL;
+    flow_path = fp;
+    cout<<fp->node<<"   ";
+}
+Flow_path* ff = new Flow_path;
+ff->node = me->topo_links[point].n_end;
+ff->next = NULL;
+Flow_path* pp = flow_path;
+cout<<" "<<ff->node;
+while(pp->next!=NULL){
+    pp=pp->next;
+}
+pp->next = ff;
 }
 
 /*
 eSDN. above function not being used.
 */
 void TcpAgent::install_path(){
-    Flow_path* fp = new Flow_path;
-    fp->node = here_.addr_;
-    fp->next = NULL;
-    int end = -1;
-    int now = here_.addr_;
-    flow_path = fp;
-    while(now != dst_.addr_){
-        int temp = rt_path->lookup_flat(now,dst_.addr_);
-        Flow_path* fp1 = new Flow_path;
-        fp1->node = temp;
-        fp1->next = NULL;
-        //f_path.push_back(temp);
-        // adding into the linked list
-        Flow_path* temp2 = flow_path;
-        while(temp2->next != NULL){
-            temp2=temp2->next;
-        }
-        temp2->next = fp1;
-        now = temp;
+Flow_path* fp = new Flow_path;
+fp->node = here_.addr_;
+fp->next = NULL;
+int end = -1;
+int now = here_.addr_;
+flow_path = fp;
+while(now != dst_.addr_){
+    int temp = rt_path->lookup_flat(now,dst_.addr_);
+    Flow_path* fp1 = new Flow_path;
+    fp1->node = temp;
+    fp1->next = NULL;
+    //f_path.push_back(temp);
+    // adding into the linked list
+    Flow_path* temp2 = flow_path;
+    while(temp2->next != NULL){
+	temp2=temp2->next;
     }
-    Flow_path* ab = flow_path;
-    printf("\n");
-    while (ab!=NULL){
-        printf("%d",ab->node);
-        ab=ab->next;
-    }
-    printf("\n");
+    temp2->next = fp1;
+    now = temp;
+}
+Flow_path* ab = flow_path;
+printf("\n");
+while (ab!=NULL){
+    printf("%d",ab->node);
+    ab=ab->next;
+}
+printf("\n");
 
-    prev_link = flow_path -> next;
-    btnk = flow_path->next;
+prev_link = flow_path -> next;
+btnk = flow_path->next;
 }
 
 TcpAgent::TcpAgent()
-    : Agent(PT_TCP),
-      t_seqno_(0), dupacks_(0), curseq_(0), highest_ack_(0),
-          cwnd_(0), ssthresh_(0), maxseq_(0), count_(0),
-          rtt_active_(0), rtt_seq_(-1), rtt_ts_(0.0),
-          lastreset_(0.0), closed_(0), t_rtt_(0), t_srtt_(0), t_rttvar_(0),
-      t_backoff_(0), ts_peer_(0), ts_echo_(0), tss(NULL), tss_size_(100),
-      rtx_timer_(this), delsnd_timer_(this), burstsnd_timer_(this),
-      first_decrease_(1), fcnt_(0), nrexmit_(0), restart_bugfix_(1),
-          cong_action_(0), ecn_burst_(0), ecn_backoff_(0), ect_(0),
-          use_rtt_(0), qs_requested_(0), qs_approved_(0),
-      qs_window_(0), qs_cwnd_(0), frto_(0),TimerHandler()
+: Agent(PT_TCP),
+    t_seqno_(0), dupacks_(0), curseq_(0), highest_ack_(0),
+	cwnd_(0), ssthresh_(0), maxseq_(0), count_(0),
+	rtt_active_(0), rtt_seq_(-1), rtt_ts_(0.0),
+	lastreset_(0.0), closed_(0), t_rtt_(0), t_srtt_(0), t_rttvar_(0),
+    t_backoff_(0), ts_peer_(0), ts_echo_(0), tss(NULL), tss_size_(100),
+    rtx_timer_(this), delsnd_timer_(this), burstsnd_timer_(this),
+    first_decrease_(1), fcnt_(0), nrexmit_(0), restart_bugfix_(1),
+	cong_action_(0), ecn_burst_(0), ecn_backoff_(0), ect_(0),
+	use_rtt_(0), qs_requested_(0), qs_approved_(0),
+    qs_window_(0), qs_cwnd_(0), frto_(0),TimerHandler()
 {
-    flow_path = NULL;
-    poll_off = 0;
-    prev_link = NULL;
-    btnk = NULL;
-     //btnk_fix = BTNK_POLL; // for fixed
+flow_path = NULL;
+poll_off = 0;
+prev_link = NULL;
+btnk = NULL;
+    //btnk_fix = BTNK_POLL; // for fixed
 
-    // btnk for random delay
-    btnk_wait = rand()%15+10;
-    btnk_fix = btnk_wait;
+// btnk for random delay
+btnk_wait = rand()%15+10;
+btnk_fix = btnk_wait;
 
 #ifdef TCP_DELAY_BIND_ALL
-        // defined since Dec 1999.
+    // defined since Dec 1999.
 #else /* ! TCP_DELAY_BIND_ALL */
-    bind("t_seqno_", &t_seqno_);
-    bind("rtt_", &t_rtt_);
-    bind("srtt_", &t_srtt_);
-    bind("rttvar_", &t_rttvar_);
-    bind("backoff_", &t_backoff_);
-    bind("dupacks_", &dupacks_);
-    bind("seqno_", &curseq_);
-    bind("ack_", &highest_ack_);
-    bind("cwnd_", &cwnd_);
-    bind("ssthresh_", &ssthresh_);
-    bind("maxseq_", &maxseq_);
-        bind("ndatapack_", &ndatapack_);
-        bind("ndatabytes_", &ndatabytes_);
-        bind("nackpack_", &nackpack_);
-        bind("nrexmit_", &nrexmit_);
-        bind("nrexmitpack_", &nrexmitpack_);
-        bind("nrexmitbytes_", &nrexmitbytes_);
-        bind("necnresponses_", &necnresponses_);
-        bind("ncwndcuts_", &ncwndcuts_);
-    bind("ncwndcuts1_", &ncwndcuts1_);
+bind("t_seqno_", &t_seqno_);
+bind("rtt_", &t_rtt_);
+bind("srtt_", &t_srtt_);
+bind("rttvar_", &t_rttvar_);
+bind("backoff_", &t_backoff_);
+bind("dupacks_", &dupacks_);
+bind("seqno_", &curseq_);
+bind("ack_", &highest_ack_);
+bind("cwnd_", &cwnd_);
+bind("ssthresh_", &ssthresh_);
+bind("maxseq_", &maxseq_);
+    bind("ndatapack_", &ndatapack_);
+    bind("ndatabytes_", &ndatabytes_);
+    bind("nackpack_", &nackpack_);
+    bind("nrexmit_", &nrexmit_);
+    bind("nrexmitpack_", &nrexmitpack_);
+    bind("nrexmitbytes_", &nrexmitbytes_);
+    bind("necnresponses_", &necnresponses_);
+    bind("ncwndcuts_", &ncwndcuts_);
+bind("ncwndcuts1_", &ncwndcuts1_);
 
-    // used by DCTCP
-    bind("dctcp_", &dctcp_);
-    bind("dctcp_alpha_", &dctcp_alpha_);
-    bind("dctcp_g_", &dctcp_g_);
+// used by DCTCP
+bind("dctcp_", &dctcp_);
+bind("dctcp_alpha_", &dctcp_alpha_);
+bind("dctcp_g_", &dctcp_g_);
 #endif /* TCP_DELAY_BIND_ALL */
 
 }
@@ -221,296 +221,296 @@ void
 TcpAgent::delay_bind_init_all()
 {
 
-        // Defaults for bound variables should be set in ns-default.tcl.
-        delay_bind_init_one("window_");
-        delay_bind_init_one("windowInit_");
-        delay_bind_init_one("windowInitOption_");
+    // Defaults for bound variables should be set in ns-default.tcl.
+    delay_bind_init_one("window_");
+    delay_bind_init_one("windowInit_");
+    delay_bind_init_one("windowInitOption_");
 
-        delay_bind_init_one("syn_");
-        delay_bind_init_one("max_connects_");
-        delay_bind_init_one("windowOption_");
-        delay_bind_init_one("windowConstant_");
-        delay_bind_init_one("windowThresh_");
-        delay_bind_init_one("delay_growth_");
-        delay_bind_init_one("overhead_");
-        delay_bind_init_one("tcpTick_");
-        delay_bind_init_one("ecn_");
+    delay_bind_init_one("syn_");
+    delay_bind_init_one("max_connects_");
+    delay_bind_init_one("windowOption_");
+    delay_bind_init_one("windowConstant_");
+    delay_bind_init_one("windowThresh_");
+    delay_bind_init_one("delay_growth_");
+    delay_bind_init_one("overhead_");
+    delay_bind_init_one("tcpTick_");
+    delay_bind_init_one("ecn_");
 
-        // used by DCTCP
-        delay_bind_init_one("dctcp_");
-        delay_bind_init_one("dctcp_alpha_");
-        delay_bind_init_one("dctcp_g_");
+    // used by DCTCP
+    delay_bind_init_one("dctcp_");
+    delay_bind_init_one("dctcp_alpha_");
+    delay_bind_init_one("dctcp_g_");
 
-        delay_bind_init_one("SetCWRonRetransmit_");
-        delay_bind_init_one("old_ecn_");
-        delay_bind_init_one("bugfix_ss_");
-        delay_bind_init_one("eln_");
-        delay_bind_init_one("eln_rxmit_thresh_");
-        delay_bind_init_one("packetSize_");
-        delay_bind_init_one("tcpip_base_hdr_size_");
-    delay_bind_init_one("ts_option_size_");
-        delay_bind_init_one("bugFix_");
-    delay_bind_init_one("bugFix_ack_");
-    delay_bind_init_one("bugFix_ts_");
-    delay_bind_init_one("lessCareful_");
-        delay_bind_init_one("slow_start_restart_");
-        delay_bind_init_one("restart_bugfix_");
-        delay_bind_init_one("timestamps_");
-    delay_bind_init_one("ts_resetRTO_");
-        delay_bind_init_one("maxburst_");
-    delay_bind_init_one("aggressive_maxburst_");
-        delay_bind_init_one("maxcwnd_");
-    delay_bind_init_one("numdupacks_");
-    delay_bind_init_one("numdupacksFrac_");
-    delay_bind_init_one("exitFastRetrans_");
-        delay_bind_init_one("maxrto_");
-    delay_bind_init_one("minrto_");
-        delay_bind_init_one("srtt_init_");
-        delay_bind_init_one("rttvar_init_");
-        delay_bind_init_one("rtxcur_init_");
-        delay_bind_init_one("T_SRTT_BITS");
-        delay_bind_init_one("T_RTTVAR_BITS");
-        delay_bind_init_one("rttvar_exp_");
-        delay_bind_init_one("awnd_");
-        delay_bind_init_one("decrease_num_");
-        delay_bind_init_one("increase_num_");
-    delay_bind_init_one("k_parameter_");
-    delay_bind_init_one("l_parameter_");
-        delay_bind_init_one("trace_all_oneline_");
-        delay_bind_init_one("nam_tracevar_");
+    delay_bind_init_one("SetCWRonRetransmit_");
+    delay_bind_init_one("old_ecn_");
+    delay_bind_init_one("bugfix_ss_");
+    delay_bind_init_one("eln_");
+    delay_bind_init_one("eln_rxmit_thresh_");
+    delay_bind_init_one("packetSize_");
+    delay_bind_init_one("tcpip_base_hdr_size_");
+delay_bind_init_one("ts_option_size_");
+    delay_bind_init_one("bugFix_");
+delay_bind_init_one("bugFix_ack_");
+delay_bind_init_one("bugFix_ts_");
+delay_bind_init_one("lessCareful_");
+    delay_bind_init_one("slow_start_restart_");
+    delay_bind_init_one("restart_bugfix_");
+    delay_bind_init_one("timestamps_");
+delay_bind_init_one("ts_resetRTO_");
+    delay_bind_init_one("maxburst_");
+delay_bind_init_one("aggressive_maxburst_");
+    delay_bind_init_one("maxcwnd_");
+delay_bind_init_one("numdupacks_");
+delay_bind_init_one("numdupacksFrac_");
+delay_bind_init_one("exitFastRetrans_");
+    delay_bind_init_one("maxrto_");
+delay_bind_init_one("minrto_");
+    delay_bind_init_one("srtt_init_");
+    delay_bind_init_one("rttvar_init_");
+    delay_bind_init_one("rtxcur_init_");
+    delay_bind_init_one("T_SRTT_BITS");
+    delay_bind_init_one("T_RTTVAR_BITS");
+    delay_bind_init_one("rttvar_exp_");
+    delay_bind_init_one("awnd_");
+    delay_bind_init_one("decrease_num_");
+    delay_bind_init_one("increase_num_");
+delay_bind_init_one("k_parameter_");
+delay_bind_init_one("l_parameter_");
+    delay_bind_init_one("trace_all_oneline_");
+    delay_bind_init_one("nam_tracevar_");
 
-        delay_bind_init_one("QOption_");
-        delay_bind_init_one("EnblRTTCtr_");
-        delay_bind_init_one("control_increase_");
-    delay_bind_init_one("noFastRetrans_");
-    delay_bind_init_one("precisionReduce_");
-    delay_bind_init_one("oldCode_");
-    delay_bind_init_one("useHeaders_");
-    delay_bind_init_one("low_window_");
-    delay_bind_init_one("high_window_");
-    delay_bind_init_one("high_p_");
-    delay_bind_init_one("high_decrease_");
-    delay_bind_init_one("max_ssthresh_");
-    delay_bind_init_one("cwnd_range_");
-    delay_bind_init_one("timerfix_");
-    delay_bind_init_one("rfc2988_");
-    delay_bind_init_one("singledup_");
-    delay_bind_init_one("LimTransmitFix_");
-    delay_bind_init_one("rate_request_");
-    delay_bind_init_one("qs_enabled_");
-    delay_bind_init_one("tcp_qs_recovery_");
-    delay_bind_init_one("qs_request_mode_");
-    delay_bind_init_one("qs_thresh_");
-    delay_bind_init_one("qs_rtt_");
-    delay_bind_init_one("print_request_");
+    delay_bind_init_one("QOption_");
+    delay_bind_init_one("EnblRTTCtr_");
+    delay_bind_init_one("control_increase_");
+delay_bind_init_one("noFastRetrans_");
+delay_bind_init_one("precisionReduce_");
+delay_bind_init_one("oldCode_");
+delay_bind_init_one("useHeaders_");
+delay_bind_init_one("low_window_");
+delay_bind_init_one("high_window_");
+delay_bind_init_one("high_p_");
+delay_bind_init_one("high_decrease_");
+delay_bind_init_one("max_ssthresh_");
+delay_bind_init_one("cwnd_range_");
+delay_bind_init_one("timerfix_");
+delay_bind_init_one("rfc2988_");
+delay_bind_init_one("singledup_");
+delay_bind_init_one("LimTransmitFix_");
+delay_bind_init_one("rate_request_");
+delay_bind_init_one("qs_enabled_");
+delay_bind_init_one("tcp_qs_recovery_");
+delay_bind_init_one("qs_request_mode_");
+delay_bind_init_one("qs_thresh_");
+delay_bind_init_one("qs_rtt_");
+delay_bind_init_one("print_request_");
 
-    delay_bind_init_one("frto_enabled_");
-    delay_bind_init_one("sfrto_enabled_");
-    delay_bind_init_one("spurious_response_");
+delay_bind_init_one("frto_enabled_");
+delay_bind_init_one("sfrto_enabled_");
+delay_bind_init_one("spurious_response_");
 
 #ifdef TCP_DELAY_BIND_ALL
-    // out because delay-bound tracevars aren't yet supported
-        delay_bind_init_one("t_seqno_");
-        delay_bind_init_one("rtt_");
-        delay_bind_init_one("srtt_");
-        delay_bind_init_one("rttvar_");
-        delay_bind_init_one("backoff_");
-        delay_bind_init_one("dupacks_");
-        delay_bind_init_one("seqno_");
-        delay_bind_init_one("ack_");
-        delay_bind_init_one("cwnd_");
-        delay_bind_init_one("ssthresh_");
-        delay_bind_init_one("maxseq_");
-        delay_bind_init_one("ndatapack_");
-        delay_bind_init_one("ndatabytes_");
-        delay_bind_init_one("nackpack_");
-        delay_bind_init_one("nrexmit_");
-        delay_bind_init_one("nrexmitpack_");
-        delay_bind_init_one("nrexmitbytes_");
-        delay_bind_init_one("necnresponses_");
-        delay_bind_init_one("ncwndcuts_");
-    delay_bind_init_one("ncwndcuts1_");
+// out because delay-bound tracevars aren't yet supported
+    delay_bind_init_one("t_seqno_");
+    delay_bind_init_one("rtt_");
+    delay_bind_init_one("srtt_");
+    delay_bind_init_one("rttvar_");
+    delay_bind_init_one("backoff_");
+    delay_bind_init_one("dupacks_");
+    delay_bind_init_one("seqno_");
+    delay_bind_init_one("ack_");
+    delay_bind_init_one("cwnd_");
+    delay_bind_init_one("ssthresh_");
+    delay_bind_init_one("maxseq_");
+    delay_bind_init_one("ndatapack_");
+    delay_bind_init_one("ndatabytes_");
+    delay_bind_init_one("nackpack_");
+    delay_bind_init_one("nrexmit_");
+    delay_bind_init_one("nrexmitpack_");
+    delay_bind_init_one("nrexmitbytes_");
+    delay_bind_init_one("necnresponses_");
+    delay_bind_init_one("ncwndcuts_");
+delay_bind_init_one("ncwndcuts1_");
 #endif /* TCP_DELAY_BIND_ALL */
 
-    Agent::delay_bind_init_all();
+Agent::delay_bind_init_all();
 
-        reset();
+    reset();
 }
 
 int
 TcpAgent::delay_bind_dispatch(const char *varName, const char *localName, TclObject *tracer)
 {
-        if (delay_bind(varName, localName, "window_", &wnd_, tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "windowInit_", &wnd_init_, tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "windowInitOption_", &wnd_init_option_, tracer)) return TCL_OK;
-        if (delay_bind_bool(varName, localName, "syn_", &syn_, tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "max_connects_", &max_connects_, tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "windowOption_", &wnd_option_ , tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "windowConstant_",  &wnd_const_, tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "windowThresh_", &wnd_th_ , tracer)) return TCL_OK;
-        if (delay_bind_bool(varName, localName, "delay_growth_", &delay_growth_ , tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "overhead_", &overhead_, tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "tcpTick_", &tcp_tick_, tracer)) return TCL_OK;
-        if (delay_bind_bool(varName, localName, "ecn_", &ecn_, tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "window_", &wnd_, tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "windowInit_", &wnd_init_, tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "windowInitOption_", &wnd_init_option_, tracer)) return TCL_OK;
+    if (delay_bind_bool(varName, localName, "syn_", &syn_, tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "max_connects_", &max_connects_, tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "windowOption_", &wnd_option_ , tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "windowConstant_",  &wnd_const_, tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "windowThresh_", &wnd_th_ , tracer)) return TCL_OK;
+    if (delay_bind_bool(varName, localName, "delay_growth_", &delay_growth_ , tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "overhead_", &overhead_, tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "tcpTick_", &tcp_tick_, tracer)) return TCL_OK;
+    if (delay_bind_bool(varName, localName, "ecn_", &ecn_, tracer)) return TCL_OK;
 
-        // used by DCTCP
-        if (delay_bind_bool(varName, localName, "dctcp_", &dctcp_, tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "dctcp_alpha_", &dctcp_alpha_ , tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "dctcp_g_", &dctcp_g_ , tracer)) return TCL_OK;
+    // used by DCTCP
+    if (delay_bind_bool(varName, localName, "dctcp_", &dctcp_, tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "dctcp_alpha_", &dctcp_alpha_ , tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "dctcp_g_", &dctcp_g_ , tracer)) return TCL_OK;
 
-        if (delay_bind_bool(varName, localName, "SetCWRonRetransmit_", &SetCWRonRetransmit_, tracer)) return TCL_OK;
-        if (delay_bind_bool(varName, localName, "old_ecn_", &old_ecn_ , tracer)) return TCL_OK;
-        if (delay_bind_bool(varName, localName, "bugfix_ss_", &bugfix_ss_ , tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "eln_", &eln_ , tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "eln_rxmit_thresh_", &eln_rxmit_thresh_ , tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "packetSize_", &size_ , tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "tcpip_base_hdr_size_", &tcpip_base_hdr_size_, tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "ts_option_size_", &ts_option_size_, tracer)) return TCL_OK;
-        if (delay_bind_bool(varName, localName, "bugFix_", &bug_fix_ , tracer)) return TCL_OK;
-    if (delay_bind_bool(varName, localName, "bugFix_ack_", &bugfix_ack_, tracer)) return TCL_OK;
-    if (delay_bind_bool(varName, localName, "bugFix_ts_", &bugfix_ts_ , tracer)) return TCL_OK;
-        if (delay_bind_bool(varName, localName, "lessCareful_", &less_careful_ , tracer)) return TCL_OK;
-        if (delay_bind_bool(varName, localName, "timestamps_", &ts_option_ , tracer)) return TCL_OK;
-        if (delay_bind_bool(varName, localName, "ts_resetRTO_", &ts_resetRTO_, tracer)) return TCL_OK;
-        if (delay_bind_bool(varName, localName, "slow_start_restart_", &slow_start_restart_ , tracer)) return TCL_OK;
-        if (delay_bind_bool(varName, localName, "restart_bugfix_", &restart_bugfix_ , tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "maxburst_", &maxburst_ , tracer)) return TCL_OK;
-        if (delay_bind_bool(varName, localName, "aggressive_maxburst_", &aggressive_maxburst_ , tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "maxcwnd_", &maxcwnd_ , tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "numdupacks_", &numdupacks_, tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "numdupacksFrac_", &numdupacksFrac_, tracer)) return TCL_OK;
-    if (delay_bind_bool(varName, localName, "exitFastRetrans_", &exitFastRetrans_, tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "maxrto_", &maxrto_ , tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "minrto_", &minrto_ , tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "srtt_init_", &srtt_init_ , tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "rttvar_init_", &rttvar_init_ , tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "rtxcur_init_", &rtxcur_init_ , tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "T_SRTT_BITS", &T_SRTT_BITS , tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "T_RTTVAR_BITS", &T_RTTVAR_BITS , tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "rttvar_exp_", &rttvar_exp_ , tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "awnd_", &awnd_ , tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "decrease_num_", &decrease_num_, tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "increase_num_", &increase_num_, tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "k_parameter_", &k_parameter_, tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "l_parameter_", &l_parameter_, tracer)) return TCL_OK;
+    if (delay_bind_bool(varName, localName, "SetCWRonRetransmit_", &SetCWRonRetransmit_, tracer)) return TCL_OK;
+    if (delay_bind_bool(varName, localName, "old_ecn_", &old_ecn_ , tracer)) return TCL_OK;
+    if (delay_bind_bool(varName, localName, "bugfix_ss_", &bugfix_ss_ , tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "eln_", &eln_ , tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "eln_rxmit_thresh_", &eln_rxmit_thresh_ , tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "packetSize_", &size_ , tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "tcpip_base_hdr_size_", &tcpip_base_hdr_size_, tracer)) return TCL_OK;
+if (delay_bind(varName, localName, "ts_option_size_", &ts_option_size_, tracer)) return TCL_OK;
+    if (delay_bind_bool(varName, localName, "bugFix_", &bug_fix_ , tracer)) return TCL_OK;
+if (delay_bind_bool(varName, localName, "bugFix_ack_", &bugfix_ack_, tracer)) return TCL_OK;
+if (delay_bind_bool(varName, localName, "bugFix_ts_", &bugfix_ts_ , tracer)) return TCL_OK;
+    if (delay_bind_bool(varName, localName, "lessCareful_", &less_careful_ , tracer)) return TCL_OK;
+    if (delay_bind_bool(varName, localName, "timestamps_", &ts_option_ , tracer)) return TCL_OK;
+    if (delay_bind_bool(varName, localName, "ts_resetRTO_", &ts_resetRTO_, tracer)) return TCL_OK;
+    if (delay_bind_bool(varName, localName, "slow_start_restart_", &slow_start_restart_ , tracer)) return TCL_OK;
+    if (delay_bind_bool(varName, localName, "restart_bugfix_", &restart_bugfix_ , tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "maxburst_", &maxburst_ , tracer)) return TCL_OK;
+    if (delay_bind_bool(varName, localName, "aggressive_maxburst_", &aggressive_maxburst_ , tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "maxcwnd_", &maxcwnd_ , tracer)) return TCL_OK;
+if (delay_bind(varName, localName, "numdupacks_", &numdupacks_, tracer)) return TCL_OK;
+if (delay_bind(varName, localName, "numdupacksFrac_", &numdupacksFrac_, tracer)) return TCL_OK;
+if (delay_bind_bool(varName, localName, "exitFastRetrans_", &exitFastRetrans_, tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "maxrto_", &maxrto_ , tracer)) return TCL_OK;
+if (delay_bind(varName, localName, "minrto_", &minrto_ , tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "srtt_init_", &srtt_init_ , tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "rttvar_init_", &rttvar_init_ , tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "rtxcur_init_", &rtxcur_init_ , tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "T_SRTT_BITS", &T_SRTT_BITS , tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "T_RTTVAR_BITS", &T_RTTVAR_BITS , tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "rttvar_exp_", &rttvar_exp_ , tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "awnd_", &awnd_ , tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "decrease_num_", &decrease_num_, tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "increase_num_", &increase_num_, tracer)) return TCL_OK;
+if (delay_bind(varName, localName, "k_parameter_", &k_parameter_, tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "l_parameter_", &l_parameter_, tracer)) return TCL_OK;
 
 
-        if (delay_bind_bool(varName, localName, "trace_all_oneline_", &trace_all_oneline_ , tracer)) return TCL_OK;
-        if (delay_bind_bool(varName, localName, "nam_tracevar_", &nam_tracevar_ , tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "QOption_", &QOption_ , tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "EnblRTTCtr_", &EnblRTTCtr_ , tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "control_increase_", &control_increase_ , tracer)) return TCL_OK;
-        if (delay_bind_bool(varName, localName, "noFastRetrans_", &noFastRetrans_, tracer)) return TCL_OK;
-        if (delay_bind_bool(varName, localName, "precisionReduce_", &precision_reduce_, tracer)) return TCL_OK;
-    if (delay_bind_bool(varName, localName, "oldCode_", &oldCode_, tracer)) return TCL_OK;
-    if (delay_bind_bool(varName, localName, "useHeaders_", &useHeaders_, tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "low_window_", &low_window_, tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "high_window_", &high_window_, tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "high_p_", &high_p_, tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "high_decrease_", &high_decrease_, tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "max_ssthresh_", &max_ssthresh_, tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "cwnd_range_", &cwnd_range_, tracer)) return TCL_OK;
-    if (delay_bind_bool(varName, localName, "timerfix_", &timerfix_, tracer)) return TCL_OK;
-    if (delay_bind_bool(varName, localName, "rfc2988_", &rfc2988_, tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "singledup_", &singledup_ , tracer)) return TCL_OK;
-        if (delay_bind_bool(varName, localName, "LimTransmitFix_", &LimTransmitFix_ , tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "rate_request_", &rate_request_ , tracer)) return TCL_OK;
-        if (delay_bind_bool(varName, localName, "qs_enabled_", &qs_enabled_ , tracer)) return TCL_OK;
-    if (delay_bind_bool(varName, localName, "tcp_qs_recovery_", &tcp_qs_recovery_, tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "qs_request_mode_", &qs_request_mode_, tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "qs_thresh_", &qs_thresh_, tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "qs_rtt_", &qs_rtt_, tracer)) return TCL_OK;
-    if (delay_bind_bool(varName, localName, "print_request_", &print_request_, tracer)) return TCL_OK;
-    if (delay_bind_bool(varName, localName, "frto_enabled_", &frto_enabled_, tracer)) return TCL_OK;
-    if (delay_bind_bool(varName, localName, "sfrto_enabled_", &sfrto_enabled_, tracer)) return TCL_OK;
-    if (delay_bind_bool(varName, localName, "spurious_response_", &spurious_response_, tracer)) return TCL_OK;
+    if (delay_bind_bool(varName, localName, "trace_all_oneline_", &trace_all_oneline_ , tracer)) return TCL_OK;
+    if (delay_bind_bool(varName, localName, "nam_tracevar_", &nam_tracevar_ , tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "QOption_", &QOption_ , tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "EnblRTTCtr_", &EnblRTTCtr_ , tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "control_increase_", &control_increase_ , tracer)) return TCL_OK;
+    if (delay_bind_bool(varName, localName, "noFastRetrans_", &noFastRetrans_, tracer)) return TCL_OK;
+    if (delay_bind_bool(varName, localName, "precisionReduce_", &precision_reduce_, tracer)) return TCL_OK;
+if (delay_bind_bool(varName, localName, "oldCode_", &oldCode_, tracer)) return TCL_OK;
+if (delay_bind_bool(varName, localName, "useHeaders_", &useHeaders_, tracer)) return TCL_OK;
+if (delay_bind(varName, localName, "low_window_", &low_window_, tracer)) return TCL_OK;
+if (delay_bind(varName, localName, "high_window_", &high_window_, tracer)) return TCL_OK;
+if (delay_bind(varName, localName, "high_p_", &high_p_, tracer)) return TCL_OK;
+if (delay_bind(varName, localName, "high_decrease_", &high_decrease_, tracer)) return TCL_OK;
+if (delay_bind(varName, localName, "max_ssthresh_", &max_ssthresh_, tracer)) return TCL_OK;
+if (delay_bind(varName, localName, "cwnd_range_", &cwnd_range_, tracer)) return TCL_OK;
+if (delay_bind_bool(varName, localName, "timerfix_", &timerfix_, tracer)) return TCL_OK;
+if (delay_bind_bool(varName, localName, "rfc2988_", &rfc2988_, tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "singledup_", &singledup_ , tracer)) return TCL_OK;
+    if (delay_bind_bool(varName, localName, "LimTransmitFix_", &LimTransmitFix_ , tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "rate_request_", &rate_request_ , tracer)) return TCL_OK;
+    if (delay_bind_bool(varName, localName, "qs_enabled_", &qs_enabled_ , tracer)) return TCL_OK;
+if (delay_bind_bool(varName, localName, "tcp_qs_recovery_", &tcp_qs_recovery_, tracer)) return TCL_OK;
+if (delay_bind(varName, localName, "qs_request_mode_", &qs_request_mode_, tracer)) return TCL_OK;
+if (delay_bind(varName, localName, "qs_thresh_", &qs_thresh_, tracer)) return TCL_OK;
+if (delay_bind(varName, localName, "qs_rtt_", &qs_rtt_, tracer)) return TCL_OK;
+if (delay_bind_bool(varName, localName, "print_request_", &print_request_, tracer)) return TCL_OK;
+if (delay_bind_bool(varName, localName, "frto_enabled_", &frto_enabled_, tracer)) return TCL_OK;
+if (delay_bind_bool(varName, localName, "sfrto_enabled_", &sfrto_enabled_, tracer)) return TCL_OK;
+if (delay_bind_bool(varName, localName, "spurious_response_", &spurious_response_, tracer)) return TCL_OK;
 
 #ifdef TCP_DELAY_BIND_ALL
-    // not if (delay-bound delay-bound tracevars aren't yet supported
-        if (delay_bind(varName, localName, "t_seqno_", &t_seqno_ , tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "rtt_", &t_rtt_ , tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "srtt_", &t_srtt_ , tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "rttvar_", &t_rttvar_ , tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "backoff_", &t_backoff_ , tracer)) return TCL_OK;
+// not if (delay-bound delay-bound tracevars aren't yet supported
+    if (delay_bind(varName, localName, "t_seqno_", &t_seqno_ , tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "rtt_", &t_rtt_ , tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "srtt_", &t_srtt_ , tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "rttvar_", &t_rttvar_ , tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "backoff_", &t_backoff_ , tracer)) return TCL_OK;
 
-        if (delay_bind(varName, localName, "dupacks_", &dupacks_ , tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "seqno_", &curseq_ , tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "ack_", &highest_ack_ , tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "cwnd_", &cwnd_ , tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "ssthresh_", &ssthresh_ , tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "maxseq_", &maxseq_ , tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "ndatapack_", &ndatapack_ , tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "ndatabytes_", &ndatabytes_ , tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "nackpack_", &nackpack_ , tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "nrexmit_", &nrexmit_ , tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "nrexmitpack_", &nrexmitpack_ , tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "nrexmitbytes_", &nrexmitbytes_ , tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "necnresponses_", &necnresponses_ , tracer)) return TCL_OK;
-        if (delay_bind(varName, localName, "ncwndcuts_", &ncwndcuts_ , tracer)) return TCL_OK;
-    if (delay_bind(varName, localName, "ncwndcuts1_", &ncwndcuts1_ , tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "dupacks_", &dupacks_ , tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "seqno_", &curseq_ , tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "ack_", &highest_ack_ , tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "cwnd_", &cwnd_ , tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "ssthresh_", &ssthresh_ , tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "maxseq_", &maxseq_ , tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "ndatapack_", &ndatapack_ , tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "ndatabytes_", &ndatabytes_ , tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "nackpack_", &nackpack_ , tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "nrexmit_", &nrexmit_ , tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "nrexmitpack_", &nrexmitpack_ , tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "nrexmitbytes_", &nrexmitbytes_ , tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "necnresponses_", &necnresponses_ , tracer)) return TCL_OK;
+    if (delay_bind(varName, localName, "ncwndcuts_", &ncwndcuts_ , tracer)) return TCL_OK;
+if (delay_bind(varName, localName, "ncwndcuts1_", &ncwndcuts1_ , tracer)) return TCL_OK;
 
 #endif
 
-        return Agent::delay_bind_dispatch(varName, localName, tracer);
+    return Agent::delay_bind_dispatch(varName, localName, tracer);
 }
 
 #define TCP_WRK_SIZE        512
 /* Print out all the traced variables whenever any one is changed */
 void
 TcpAgent::traceAll() {
-    if (!channel_)
-        return;
+if (!channel_)
+    return;
 
-    double curtime;
-    Scheduler& s = Scheduler::instance();
-    char wrk[TCP_WRK_SIZE];
+double curtime;
+Scheduler& s = Scheduler::instance();
+char wrk[TCP_WRK_SIZE];
 
-    curtime = &s ? s.clock() : 0;
-    snprintf(wrk, TCP_WRK_SIZE,
-         "time: %-8.5f saddr: %-2d sport: %-2d daddr: %-2d dport:"
-         " %-2d maxseq: %-4d hiack: %-4d seqno: %-4d cwnd: %-6.3f"
-         " ssthresh: %-3d dupacks: %-2d rtt: %-6.3f srtt: %-6.3f"
-         " rttvar: %-6.3f bkoff: %-d\n", curtime, addr(), port(),
-         daddr(), dport(), int(maxseq_), int(highest_ack_),
-         int(t_seqno_), double(cwnd_), int(ssthresh_),
-         int(dupacks_), int(t_rtt_)*tcp_tick_,
-         (int(t_srtt_) >> T_SRTT_BITS)*tcp_tick_,
-         int(t_rttvar_)*tcp_tick_/4.0, int(t_backoff_));
-    (void)Tcl_Write(channel_, wrk, -1);
+curtime = &s ? s.clock() : 0;
+snprintf(wrk, TCP_WRK_SIZE,
+	"time: %-8.5f saddr: %-2d sport: %-2d daddr: %-2d dport:"
+	" %-2d maxseq: %-4d hiack: %-4d seqno: %-4d cwnd: %-6.3f"
+	" ssthresh: %-3d dupacks: %-2d rtt: %-6.3f srtt: %-6.3f"
+	" rttvar: %-6.3f bkoff: %-d\n", curtime, addr(), port(),
+	daddr(), dport(), int(maxseq_), int(highest_ack_),
+	int(t_seqno_), double(cwnd_), int(ssthresh_),
+	int(dupacks_), int(t_rtt_)*tcp_tick_,
+	(int(t_srtt_) >> T_SRTT_BITS)*tcp_tick_,
+	int(t_rttvar_)*tcp_tick_/4.0, int(t_backoff_));
+(void)Tcl_Write(channel_, wrk, -1);
 }
 
 /* Print out just the variable that is modified */
 void
 TcpAgent::traceVar(TracedVar* v)
 {
-    if (!channel_)
-        return;
+if (!channel_)
+    return;
 
-    double curtime;
-    Scheduler& s = Scheduler::instance();
-    char wrk[TCP_WRK_SIZE];
+double curtime;
+Scheduler& s = Scheduler::instance();
+char wrk[TCP_WRK_SIZE];
 
-    curtime = &s ? s.clock() : 0;
+curtime = &s ? s.clock() : 0;
 
-    // XXX comparing addresses is faster than comparing names
-    if (v == &cwnd_)
-        snprintf(wrk, TCP_WRK_SIZE,
-             "%-8.5f %-2d %-2d %-2d %-2d %s %-6.3f\n",
-             curtime, addr(), port(), daddr(), dport(),
-             v->name(), double(*((TracedDouble*) v)));
-    else if (v == &t_rtt_)
-        snprintf(wrk, TCP_WRK_SIZE,
-             "%-8.5f %-2d %-2d %-2d %-2d %s %-6.3f\n",
-             curtime, addr(), port(), daddr(), dport(),
-             v->name(), int(*((TracedInt*) v))*tcp_tick_);
-    else if (v == &t_srtt_)
-        snprintf(wrk, TCP_WRK_SIZE,
-             "%-8.5f %-2d %-2d %-2d %-2d %s %-6.3f\n",
-             curtime, addr(), port(), daddr(), dport(),
-             v->name(),
-             (int(*((TracedInt*) v)) >> T_SRTT_BITS)*tcp_tick_);
-    else if (v == &t_rttvar_)
-        snprintf(wrk, TCP_WRK_SIZE,
+// XXX comparing addresses is faster than comparing names
+if (v == &cwnd_)
+    snprintf(wrk, TCP_WRK_SIZE,
+	    "%-8.5f %-2d %-2d %-2d %-2d %s %-6.3f\n",
+	    curtime, addr(), port(), daddr(), dport(),
+	    v->name(), double(*((TracedDouble*) v)));
+else if (v == &t_rtt_)
+    snprintf(wrk, TCP_WRK_SIZE,
+	    "%-8.5f %-2d %-2d %-2d %-2d %s %-6.3f\n",
+	    curtime, addr(), port(), daddr(), dport(),
+	    v->name(), int(*((TracedInt*) v))*tcp_tick_);
+else if (v == &t_srtt_)
+    snprintf(wrk, TCP_WRK_SIZE,
+	    "%-8.5f %-2d %-2d %-2d %-2d %s %-6.3f\n",
+	    curtime, addr(), port(), daddr(), dport(),
+	    v->name(),
+	    (int(*((TracedInt*) v)) >> T_SRTT_BITS)*tcp_tick_);
+else if (v == &t_rttvar_)
+    snprintf(wrk, TCP_WRK_SIZE,
              "%-8.5f %-2d %-2d %-2d %-2d %s %-6.3f\n",
              curtime, addr(), port(), daddr(), dport(),
              v->name(),
@@ -1034,49 +1034,64 @@ int TcpAgent::command(int argc, const char*const* argv)
 {
     if (argc == 2) {
         if (strcmp(argv[1], "flow_start") == 0) {
-            // updatePath() //increment number of flows at switches in the path
+            // updatePath()
+	    //increment number of flows at switches in the path
+	    std::cout << "TcpAgent::command:: flow_start print_pathway called" << std::endl;
             print_pathway();
             // if (flow_path == NULL)
             //     install_path();
             //cout<<"IN FLOW START FUNCTION"<<endl;
+
             incrementFlows();
+
             if(isDHTEnabled)
             {
+		// start DHT
                 init_DHT(1);
             }
+
             Event* e;
             expire(e);
             return (TCL_OK);
         }
+
         if (strcmp(argv[1], "flow_end") == 0){
             // Node *me = Node::get_node_by_address(addr());
             // me->num_flow--;
+
             cwnd_ = 0;
             decrementFlows();
+
             if (isDHTEnabled) {
+		// stop dht
+		std::cout << "TcpAgent::command:: stop init_DHT called" << std::endl;
                 init_DHT(0);
             }
+
             poll_off = 1;
             return (TCL_OK);
         }
 
-    if (strcmp(argv[1], "tcp_send") == 0) {
-        printf("detected tcp_send\n");
-        send_one_packet();
-        return (TCL_OK);
-    }
-    if (strcmp(argv[1], "PATH") == 0) {
-        printf("detected tcp::print_pathway\n");
-        print_pathway();
-        return (TCL_OK);
-    }
-    if (strcmp(argv[1], "print_pathway") == 0) {
-        printf("detected tcp::print_pathway\n");
-        print_pathway();
-        return (TCL_OK);
+        if (strcmp(argv[1], "tcp_send") == 0) {
+        	std::cout << "TcpAgent::command:: tcp send called" << std::endl
+        	// printf("detected tcp_send\n");
+            send_one_packet();
+            return (TCL_OK);
+        }
+
+        if (strcmp(argv[1], "PATH") == 0) {
+            printf("detected tcp::print_pathway\n");
+            print_pathway();
+            return (TCL_OK);
+        }
+
+        if (strcmp(argv[1], "print_pathway") == 0) {
+            printf("detected tcp::print_pathway\n");
+            print_pathway();
+            return (TCL_OK);
+        }
     }
 
-    }
     if (argc == 3) {
 
         if (strcmp(argv[1], "advance") == 0) {
