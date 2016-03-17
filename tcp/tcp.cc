@@ -1072,9 +1072,9 @@ int TcpAgent::command(int argc, const char*const* argv)
         }
 
         if (strcmp(argv[1], "tcp_send") == 0) {
-            std::cout << "TcpAgent::command:: tcp send called" << std::endl
-                // printf("detected tcp_send\n");
-                send_one_packet();
+            std::cout << "TcpAgent::command:: tcp send called" << std::endl;
+            // printf("detected tcp_send\n");
+            send_one_packet();
             return (TCL_OK);
         }
 
