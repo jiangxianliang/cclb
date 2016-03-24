@@ -953,6 +953,7 @@ void TcpAgent::increment2(int n) {
     }
     temp->que->incrementFlows();
 }
+
 // void TcpAgent::incrementFlows() {
 //     Node *me = Node::get_node_by_address(addr());
 
@@ -1026,15 +1027,12 @@ void TcpAgent::decrement2(int n) {
 //     }
 // }
 
-
-
-
 int TcpAgent::command(int argc, const char*const* argv)
 {
     if (argc == 2) {
         if (strcmp(argv[1], "flow_start") == 0) {
             // updatePath()
-            //increment number of flows at switches in the path
+            // increment number of flows at switches in the path
             std::cout << "TcpAgent::command:: flow_start print_pathway called" << std::endl;
             print_pathway();
             // if (flow_path == NULL)
@@ -1057,6 +1055,8 @@ int TcpAgent::command(int argc, const char*const* argv)
         if (strcmp(argv[1], "flow_end") == 0){
             // Node *me = Node::get_node_by_address(addr());
             // me->num_flow--;
+
+            std::cout << "TCPAgent::command:: flow_end called at " << Scheduler::instance().clock() << std::endl;
 
             cwnd_ = 0;
             decrementFlows();
@@ -2724,7 +2724,11 @@ ofstream out1("finish_times.txt");
 // added by us
 void TcpAgent::finish()
 {
+    // call flow end on flow completion
+    Tcl::instance().evalf("%s flow_end", this->name());
+
     Tcl::instance().evalf("%s done", this->name());
+
     // added by us
     out1 << here_.addr_ << "\t" << here_.port_ << "\t" << dst_.addr_ << "\t" << dst_.port_ << "\t";
     out1 << setprecision(15) << Scheduler::instance().clock() << endl;
