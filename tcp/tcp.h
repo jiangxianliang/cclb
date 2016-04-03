@@ -238,6 +238,9 @@ public:
 	void poll_per1();
 	int btnk_wait;
 
+    // eSDN :: holds flow size
+    long flow_bytes;
+
 	virtual ~TcpAgent() {free(tss);}
         virtual void recv(Packet*, Handler*);
 	virtual void timeout(int tno);

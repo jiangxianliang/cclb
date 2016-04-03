@@ -612,6 +612,9 @@ TcpAgent::reset()
     ncwndcuts1_ = 0;
     cancel_timers();      // suggested by P. Anelli.
 
+    // esdn: size of flow
+    flow_bytes = 0;
+
     if (control_increase_) {
         prev_highest_ack_ = highest_ack_ ;
     }
@@ -1033,8 +1036,11 @@ int TcpAgent::command(int argc, const char*const* argv)
         if (strcmp(argv[1], "flow_start") == 0) {
             // updatePath()
             // increment number of flows at switches in the path
-            std::cout << "TcpAgent::command:: flow_start print_pathway called" << std::endl;
+            std::cout << "TcpAgent::command:: flow_start: called at "
+                << Scheduler::instance().clock() <<  std::endl;
+
             print_pathway();
+
             // if (flow_path == NULL)
             //     install_path();
             //cout<<"IN FLOW START FUNCTION"<<endl;
@@ -1044,6 +1050,7 @@ int TcpAgent::command(int argc, const char*const* argv)
             if(isDHTEnabled)
             {
                 // start DHT
+                std::cout << "TcpAgent::command:: start init_DHT called" << std::endl;
                 init_DHT(1);
             }
 
@@ -1056,7 +1063,8 @@ int TcpAgent::command(int argc, const char*const* argv)
             // Node *me = Node::get_node_by_address(addr());
             // me->num_flow--;
 
-            std::cout << "TCPAgent::command:: flow_end called at " << Scheduler::instance().clock() << std::endl;
+            std::cout << "TCPAgent::command:: flow_end called at " <<
+                Scheduler::instance().clock() << std::endl;
 
             cwnd_ = 0;
             decrementFlows();
@@ -1072,7 +1080,7 @@ int TcpAgent::command(int argc, const char*const* argv)
         }
 
         if (strcmp(argv[1], "tcp_send") == 0) {
-            std::cout << "TcpAgent::command:: tcp send called" << std::endl;
+            std::cout << "TcpAgent::command:: tcp_send called" << std::endl;
             // printf("detected tcp_send\n");
             send_one_packet();
             return (TCL_OK);
@@ -1092,7 +1100,6 @@ int TcpAgent::command(int argc, const char*const* argv)
     }
 
     if (argc == 3) {
-
         if (strcmp(argv[1], "advance") == 0) {
             int newseq = atoi(argv[2]);
             if (newseq > maxseq_)
@@ -1145,7 +1152,28 @@ int TcpAgent::command(int argc, const char*const* argv)
             t_backoff_ = other->t_backoff_;
             return (TCL_OK);
         }
+
+        /** eSDN send function **/
+        if (strcmp(argv[1], "esdn_send") == 0) {
+            std::cout << "TCPAgent::command:: esdn_send: sending "
+                << atoi(argv[2]) << " bytes at "
+                << Scheduler::instance().clock() << std::endl;
+
+            // call flow_start
+            Tcl::instance().evalf("%s flow_start", this->name());
+
+            // bytes to send
+            flow_bytes = atoi(argv[2]);
+
+            // send the given bytes over the TCP connection
+            sendmsg(atoi(argv[2]));
+
+            Event* e;
+            expire(e);
+            return (TCL_OK);
+        }
     }
+
     return (Agent::command(argc, argv));
 }
 
@@ -1190,7 +1218,7 @@ void TcpAgent::print_pathway() {
     } else {
         printf("pathway global is NULl\n");
     }
-    printf("---------------------------------------------------------------\n");
+    printf("----------------------------------------------------------\n");
     return;
 }
 
@@ -1714,12 +1742,6 @@ void TcpAgent::poll_btnk_per() {
     btnk_fix++;
 }
 
-
-
-
-
-
-
 void TcpAgent::poll_round_robin() {
     Flow_path* fp = prev_link;
     fetch_stats(flow_path->node,flow_path->next->node);
@@ -2229,6 +2251,28 @@ void TcpAgent::recv_newack_helper(Packet *pkt) {
     if (!ect_ && hdr_flags::access(pkt)->ecnecho() &&
             !hdr_flags::access(pkt)->cong_action())
         ect_ = 1;
+
+    /* esdn :: This condition gets fulfilled when the flow_end should be called. */
+    if ((flow_bytes != 0) && (highest_ack_ >= curseq_-1) && (closed_ == 1)) {
+        std::cout << "esdn::flowend called at:: "
+            << Scheduler::instance().clock()
+            << "for flow_bytes" << flow_bytes
+            << std::endl;
+
+        // call flow end function here
+        Tcl::instance().evalf("%s flow_end", this->name());
+
+        // print flow time to file
+        std::ofstream out1("finish_times.txt");
+
+        out1 << here_.addr_ << "\t"
+            << here_.port_ << "\t"
+            << dst_.addr_ << "\t"
+            << dst_.port_ << "\t";
+        out1 << setprecision(15)
+            << Scheduler::instance().clock() << std::endl;
+    }
+
     /* if the connection is done, call finish() */
     if ((highest_ack_ >= curseq_-1) && !closed_) {
         closed_ = 1;
@@ -2718,21 +2762,11 @@ void TcpAgent::tcp_eln(Packet *pkt)
  * This function is invoked when the connection is done. It in turn
  * invokes the Tcl finish procedure that was registered with TCP.
  */
-
-// added by us
-ofstream out1("finish_times.txt");
-// added by us
 void TcpAgent::finish()
 {
-    // call flow end on flow completion
-    Tcl::instance().evalf("%s flow_end", this->name());
-
+    // std::cout << "TcpAgent:: finish: called at "
+    //     << Scheduler::instance().clock() << "\n";
     Tcl::instance().evalf("%s done", this->name());
-
-    // added by us
-    out1 << here_.addr_ << "\t" << here_.port_ << "\t" << dst_.addr_ << "\t" << dst_.port_ << "\t";
-    out1 << setprecision(15) << Scheduler::instance().clock() << endl;
-    // added by us
 }
 
 void RtxTimer::expire(Event*)
