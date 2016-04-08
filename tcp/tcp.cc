@@ -2220,6 +2220,7 @@ int TcpAgent::network_limited() {
         return 0;
 }
 
+std::ofstream finish_times_ofstream("finish_times.txt");
 void TcpAgent::recv_newack_helper(Packet *pkt) {
     //hdr_tcp *tcph = hdr_tcp::access(pkt);
     newack(pkt);
@@ -2263,13 +2264,12 @@ void TcpAgent::recv_newack_helper(Packet *pkt) {
         Tcl::instance().evalf("%s flow_end", this->name());
 
         // print flow time to file
-        std::ofstream out1("finish_times.txt");
 
-        out1 << here_.addr_ << "\t"
+        finish_times_ofstream << here_.addr_ << "\t"
             << here_.port_ << "\t"
             << dst_.addr_ << "\t"
             << dst_.port_ << "\t";
-        out1 << setprecision(15)
+        finish_times_ofstream << setprecision(15)
             << Scheduler::instance().clock() << std::endl;
     }
 
