@@ -99,6 +99,14 @@ Scheduler::schedule(Handler* h, Event* e, double delay)
         //         abort();
         // }
 
+        if (e->uid_ > 0) {
+            printf("eSDN:: WARNING :: event uid is %d :: dispatching event\n", e->uid_);
+            dispatch(e, e->time_);
+            printf("uid after dispatch:: %d\n", e->uid_);
+            schedule(h, e, delay);
+            return;
+        }
+
         if (delay < 0) {
                 // You probably don't want to do this
                 // (it probably represents a bug in your simulation).
@@ -165,16 +173,20 @@ Scheduler::dispatch(Event* p, double t)
         // }
 
         if (p->uid_ == 0) {
-            // printf("uid :: 0 event in dispatch\n");
-            // if (t < clock_) {
-            //     printf("ns: scheduler going backwards in time from %f to %f.\n", clock_, t);
-            //     printf("Current Event:\n");
-            //     printf("t:%f uid: %d ", p->time_, p->uid_);
-            //     printf(" handler: %p\n", p->handler_);
-            //     dumpq();
-            //     abort();
-            //     return;
-            // }
+            printf("eSDN:: WARNING :: uid 0 event in dispatch\n");
+            if (t < clock_) {
+                printf("eSDN:: WARNING :: t < clock, clock:: %f time:: %f\n", clock_, t);
+                printf("eSDN:: WARNING :: t:%f uid: %d ", p->time_, p->uid_);
+                printf("eSDN:: WARNING :: t:%f uid: %d ", p->time_, p->uid_);
+                // printf(" handler: %p\n", p->handler_);
+                // printf("ns: scheduler going backwards in time from %f to %f.\n", clock_, t);
+                // printf("Current Event:\n");
+                // printf("t:%f uid: %d ", p->time_, p->uid_);
+                // printf(" handler: %p\n", p->handler_);
+                // dumpq();
+                // abort();
+                // return;
+            }
 
             // printf("dispatcng uid 0\n");
         }
