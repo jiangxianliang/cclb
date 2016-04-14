@@ -1178,8 +1178,8 @@ int TcpAgent::command(int argc, const char*const* argv)
             // send the given bytes over the TCP connection
             sendmsg(atoi(argv[2]));
 
-            // Event* e;
-            // expire(e);
+            Event* e;
+            expire(e);
             return (TCL_OK);
         }
     }
@@ -2232,6 +2232,7 @@ int TcpAgent::network_limited() {
 
 std::ofstream finish_times_ofstream("finish_times.txt");
 void TcpAgent::recv_newack_helper(Packet *pkt) {
+    std::cout << "----" << std::endl;
     //hdr_tcp *tcph = hdr_tcp::access(pkt);
     newack(pkt);
     if (qs_window_ && highest_ack_ >= qs_window_) {
@@ -2298,6 +2299,7 @@ void TcpAgent::recv_newack_helper(Packet *pkt) {
 
     /* if the connection is done, call finish() */
     if ((highest_ack_ >= curseq_-1) && !closed_) {
+        // std::cout << "tcp:: first finish method called" << std::endl;
         closed_ = 1;
         finish();
     }

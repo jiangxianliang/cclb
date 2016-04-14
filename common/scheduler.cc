@@ -99,6 +99,8 @@ Scheduler::schedule(Handler* h, Event* e, double delay)
         //         abort();
         // }
 
+        // if uid is > 0 then disatch the event
+        // to fix it then schedule the event.
         if (e->uid_ > 0) {
             printf("eSDN:: WARNING :: event uid is %d :: dispatching event\n", e->uid_);
             dispatch(e, e->time_);
@@ -119,7 +121,14 @@ Scheduler::schedule(Handler* h, Event* e, double delay)
                 fprintf(stderr, "Scheduler: UID space exhausted!\n");
                 abort();
         }
+
         e->uid_ = uid_++;
+
+        // warn if scheduler assigns 0 value
+        if (uid_ == 0) {
+            printf("eSDN:: WARNING :: scheduler assigned uid: 0\n");
+        }
+
         e->handler_ = h;
         double t = clock_ + delay;
 
@@ -172,25 +181,26 @@ Scheduler::dispatch(Event* p, double t)
         //     fprintf(stderr, "Warning: discarding Event without an a valid id (id:: 0)\n");
         // }
 
+        // warn and ignore if 0 in dispacth
         if (p->uid_ == 0) {
             printf("eSDN:: WARNING :: uid 0 event in dispatch\n");
-            if (t < clock_) {
-                printf("eSDN:: WARNING :: t < clock, clock:: %f time:: %f\n", clock_, t);
-                printf("eSDN:: WARNING :: t:%f uid: %d ", p->time_, p->uid_);
-                printf("eSDN:: WARNING :: t:%f uid: %d ", p->time_, p->uid_);
-                // printf(" handler: %p\n", p->handler_);
-                // printf("ns: scheduler going backwards in time from %f to %f.\n", clock_, t);
-                // printf("Current Event:\n");
-                // printf("t:%f uid: %d ", p->time_, p->uid_);
-                // printf(" handler: %p\n", p->handler_);
-                // dumpq();
-                // abort();
-                // return;
-            }
-
-            // printf("dispatcng uid 0\n");
+            return;
+            // if (t < clock_) {
+            //     printf("eSDN:: WARNING :: t < clock, clock:: %f time:: %f\n", clock_, t);
+            //     printf("eSDN:: WARNING :: t:%f uid: %d \n", p->time_, p->uid_);
+            //     // printf(" handler: %p\n", p->handler_);
+            //     // printf("ns: scheduler going backwards in time from %f to %f.\n", clock_, t);
+            //     // printf("Current Event:\n");
+            //     // printf("t:%f uid: %d ", p->time_, p->uid_);
+            //     // printf(" handler: %p\n", p->handler_);
+            //     // dumpq();
+            //     // abort();
+            //     // return;
+            // }
+            // // printf("dispatcng uid 0\n");
         }
 
+        // backwards in time check ignored
         // if (t < clock_) {
         //     printf("ns: scheduler going backwards in time from %f to %f.\n", clock_, t);
         //     printf("Current Event:\n");
@@ -326,16 +336,16 @@ Scheduler::command(int argc, const char*const* argv)
                         }
 
                         // debugging code added
-                        printf("scheduling event:\n");
-                        printf("event uid:: ");
-                        printf(UID_PRINTF_FORMAT, e->uid_);
-                        printf("\n");
-                        printf("arguments:");
-                        for (int i = 0; i < argc; ++i) {
-                            printf(" ");
-                            printf(argv[i]);
-                        }
-                        printf("\n");
+                        // printf("scheduling event:\n");
+                        // printf("event uid:: ");
+                        // printf(UID_PRINTF_FORMAT, e->uid_);
+                        // printf("\n");
+                        // printf("arguments:");
+                        // for (int i = 0; i < argc; ++i) {
+                        //     printf(" ");
+                        //     printf(argv[i]);
+                        // }
+                        // printf("\n");
 
                         schedule(&at_handler, e, delay);
                         sprintf(tcl.buffer(), UID_PRINTF_FORMAT, e->uid_);
