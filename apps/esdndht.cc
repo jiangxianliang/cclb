@@ -210,7 +210,7 @@ eSDN
 */
 	if (hdr->ret == 1 || hdr->ret == 0 || hdr->start == 1 || hdr->start == 0 ) {
 		// Send an 'echo'. First save the old packet's send_time
-//		cout<<"Agent esdndht is called from "<<dst_.addr_ << " to " <<  here_.addr_<< " for link "<<hdr->link_num << " with status "<< hdr->start <<endl;
+		cout<<"Agent esdndht is called from "<< dst_.addr_ << " to " <<  here_.addr_<< " for link "<<hdr->link_num << " with status "<< hdr->start <<endl;
 
 		int link = hdr->link_num;
 
@@ -219,12 +219,12 @@ eSDN
 
 		Node *me = Node::get_node_by_address(addr());
 
-    if (me->poll_stat==0)
-    {
-        me->poll_stat = 1;
-        Event* eve;
-        me->expire(eve);
-    }
+        if (me->poll_stat==0)
+        {
+            me->poll_stat = 1;
+            Event* eve;
+            me->expire(eve);
+        }
 
 		int from = dst_.addr_; // CHECK THIS
 
@@ -233,40 +233,44 @@ eSDN
 		for (int i=0;i<me->fixed_mappings.size();i++){
 			if (me->fixed_mappings[i].address == addr()){
         //cout<<"addr()   "<<i<<"  "<<addr()<<endl;
-				//cout<<"MATCHED !"<<endl;
+        //cout<<"MATCHED !"<<endl;
         for (int j=0;j<me->fixed_mappings[i].fixed_links.size();j++){
 					if (me->fixed_mappings[i].fixed_links[j].link_num == link ){
 						for (int k=0;k<me->fixed_mappings[i].fixed_links[j].node_count.size();k++){
 							if(me->fixed_mappings[i].fixed_links[j].node_count[k].node==from){
 								if (hdr->start == 1)
 								{
-                  //cout<<"INCREASING THE POLLING   for   "<< link <<"for node   "<<from<<endl;
-									me->fixed_mappings[i].fixed_links[j].node_count[k].count++;
-                  //cout<<" IN esdndht  "<<me->fixed_mappings[i].fixed_links[j].node_count[k].count<<endl;
+                                    //cout<<"INCREASING THE POLLING   for   "<< link <<"for node   "<<from<<endl;
+                                    me->fixed_mappings[i].fixed_links[j].node_count[k].count++;
+                                    //cout<<" IN esdndht  "<<me->fixed_mappings[i].fixed_links[j].node_count[k].count<<endl;
+                                    Packet::free(pkt);
 									return;
 								}
 								else if(hdr->start == 0 ){
-                  //cout<<"DECREASING NOW for "<< here_.addr_<<"  " <<link<<endl;
+                                    //cout<<"DECREASING NOW for "<< here_.addr_<<"  " <<link<<endl;
 									me->fixed_mappings[i].fixed_links[j].node_count[k].count--;
 									//cout<<" IN esdndht  "<<me->fixed_mappings[i].fixed_links[j].node_count[k].count<<endl;
-
-                  return;
+                                    Packet::free(pkt);
+                                    return;
 								}
 							}
 						}
 						if (hdr->start == 1)
 						{
-              //cout<<"adding links "<<endl;
-              //cout<<"PUSHING THE LINK "<< link <<" FOR "<<from<<endl;
+                            //cout<<"adding links "<<endl;
+                            //cout<<"PUSHING THE LINK "<< link <<" FOR "<<from<<endl;
 							Node_count nc;
 							nc.node = from;
 							nc.count = 1;
 							me->fixed_mappings[i].fixed_links[j].node_count.push_back(nc);
+
+                            Packet::free(pkt);
 							return;
 						}
 						else if (hdr->start == 0)
 						{
 							printf("ERROR IN HDR->RET = 0 DHT KILL ME \n");
+                            Packet::free(pkt);
 							return;
 						}
 					}
@@ -277,9 +281,9 @@ eSDN
 
 		// KILL ME NOW
 	} else if(hdr->ret == 2 || hdr->start==2) {
-//    cout<<"Agent esdndht is called from "<<dst_.addr_ << " to " <<  here_.addr_<< " for link "<<hdr->link_num << " with status "<< hdr->no_flows <<endl;
+        //    cout<<"Agent esdndht is called from "<<dst_.addr_ << " to " <<  here_.addr_<< " for link "<<hdr->link_num << " with status "<< hdr->no_flows <<endl;
 
-    //cout<<"NUMBER OF FLOWS ON LINK   "<<hdr->link_num<<" is  "<<hdr->no_flows<<endl;
+        //cout<<"NUMBER OF FLOWS ON LINK   "<<hdr->link_num<<" is  "<<hdr->no_flows<<endl;
 
 		Node* me = Node::get_node_by_address(addr());
 		if (hdr->statDemanded == NUMFLOWS)
@@ -291,11 +295,9 @@ eSDN
 		Packet::free(pkt);
 		return;
 	}
-
-
-
-	// Is the 'ret' field = 0 (i.e. the receiving node is being pinged)?
-else {
+    else
+    {
+        // Is the 'ret' field = 0 (i.e. the receiving node is being pinged)?
 		// A packet was received. Use tcl.eval to call the Tcl
 		// interpreter with the ping results.
 		// Note: In the Tcl code, a procedure

@@ -2,7 +2,7 @@
 	/*
 	 * Copyright (c) 1996-1997 The Regents of the University of California.
 	 * All rights reserved.
-	 * 
+	 *
 	 * Redistribution and use in source and binary forms, with or without
 	 * modification, are permitted provided that the following conditions
 	 * are met:
@@ -18,7 +18,7 @@
 	 * 4. Neither the name of the University nor of the Labo ratory may be used
 	 *    to endorse or promote products derived from this software without
 	 *    specific prior written permission.
-	 * 
+	 *
 	 * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
 	 * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 	 * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -117,7 +117,17 @@
 	 }
 
 Packet* PacketQueue::enque(Packet* p)
-{ 
+{
+    // if (p != NULL)
+    // {
+    //     hdr_cmn* hdr_cmn = HDR_CMN(p);
+    //     printf("pkt uid: ");
+    //     printf(UID_PRINTF_FORMAT, hdr_cmn->uid());
+    //     printf(" | ");
+    //     printf("type: %d", hdr_cmn->ptype());
+    //     printf("\n");
+    // }
+
 	// Returns previous tail
     // custom code
     // Traverse the linked list and print the packet which matches
@@ -151,7 +161,7 @@ Packet* PacketQueue::enque(Packet* p)
       //                   for (int i = 0; i < 67; ++i)
       //                   	printf("%d", key[i]);
       //                   printf("\n");
-                        
+
                         bool updated = false;
 
                         // check if in map content
@@ -284,11 +294,11 @@ Packet* PacketQueue::enque(Packet* p)
 		for (Packet* p = head_; p != 0; p = p->next_){
 			hdr_ip* ip = hdr_ip::access(p);
 			hdr_cmn* hdr_cmn = HDR_CMN(p);
-			
-			//HP so that we dont count the ping packets as separate flows. 
+
+			//HP so that we dont count the ping packets as separate flows.
 			// if (hdr_cmn->ptype() == 44) {
 			// 	continue;
-			// }	
+			// }
 			//HP end
 
 			Flow1* f1 = new Flow1(hdr_cmn->ptype());
@@ -326,7 +336,7 @@ Packet* PacketQueue::enque(Packet* p)
 			if (p == target) {
 				if (!pp) deque();
 				else {
-					if (p == tail_) 
+					if (p == tail_)
 						tail_= pp;
 					pp->next_= p->next_;
 					--len_;
@@ -369,7 +379,7 @@ Packet* PacketQueue::enque(Packet* p)
 
 
 		Queue::Queue() : Connector(), blocked_(0), unblock_on_resume_(1), qh_(*this),
-		pq_(0), 
+		pq_(0),
 			 last_change_(0), /* temporarily NULL */
 		old_util_(0), period_begin_(0), cur_util_(0), buf_slot_(0),
 		util_buf_(NULL)
@@ -470,7 +480,7 @@ Packet* PacketQueue::enque(Packet* p)
 		double intv = int_end - int_begin;
 		double tot_intv = int_begin - period_begin_;
 		if (intv || tot_intv) {
-			int guard = 0; // for protecting against long while loops 
+			int guard = 0; // for protecting against long while loops
 			cur_util_ = (link_state * intv + cur_util_ * tot_intv) /
 			(intv + tot_intv);
 			while (tot_intv + intv > util_check_intv_ &&
@@ -485,10 +495,10 @@ Packet* PacketQueue::enque(Packet* p)
 	}
 	}
 
-	double Queue::utilization(void) 
+	double Queue::utilization(void)
 	{
 		double now = Scheduler::instance().clock();
-		
+
 		utilUpdate(last_change_, now, blocked_);
 		last_change_ = now;
 
@@ -501,7 +511,7 @@ Packet* PacketQueue::enque(Packet* p)
 		double now = Scheduler::instance().clock();
 		double peak = 0;
 		int i;
-		
+
 		// PS: if peak_utilization tracking is disabled,
 		// return the weighed avg instead
 		if (util_records_ == 0)

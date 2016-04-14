@@ -369,7 +369,7 @@ void PingAgent::recv(Packet* pkt, Handler*)
   if (hdr->ret == 3) {
     // Send an 'echo'. First save the old packet's send_time
 
-//    cout<<"Agent PING is called from "<< dst_.addr_ << " to " <<  here_.addr_<< " for link " << hdr->link_num << " with status " <<endl;
+    // cout<<"Agent PING is called from "<< dst_.addr_ << " to " <<  here_.addr_<< " for link " << hdr->link_num << " with status " <<endl;
 
 
 
@@ -438,14 +438,17 @@ void PingAgent::recv(Packet* pkt, Handler*)
 
     char out[100];
 
-    if (oneway) //AG
+    if (oneway) //AGENTS
+    {
       	sprintf(out, "%s recv %d %d %3.1f %3.1f", name(),
 	    hdrip->src_.addr_ >> Address::instance().NodeShift_[1],
 	    hdr->seq, (hdr->rcv_time - hdr->send_time) * 1000,
 	    (Scheduler::instance().clock()-hdr->rcv_time) * 1000);
-    else sprintf(out, "%s recv %d %3.1f", name(),
+    } else {
+        sprintf(out, "%s recv %d %3.1f", name(),
 	    hdrip->src_.addr_ >> Address::instance().NodeShift_[1],
 	    (Scheduler::instance().clock()-hdr->send_time) * 1000);
+    }
     Tcl& tcl = Tcl::instance();
     tcl.eval(out);
     // Discard the packet

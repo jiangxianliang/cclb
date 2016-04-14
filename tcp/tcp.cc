@@ -1160,7 +1160,17 @@ int TcpAgent::command(int argc, const char*const* argv)
                 << Scheduler::instance().clock() << std::endl;
 
             // call flow_start
-            Tcl::instance().evalf("%s flow_start", this->name());
+            // Tcl::instance().evalf("%s flow_start", this->name());
+            print_pathway();
+
+            incrementFlows();
+
+            if(isDHTEnabled)
+            {
+                // start DHT
+                std::cout << "TcpAgent::command:: start init_DHT called" << std::endl;
+                init_DHT(1);
+            }
 
             // bytes to send
             flow_bytes = atoi(argv[2]);
@@ -1168,8 +1178,8 @@ int TcpAgent::command(int argc, const char*const* argv)
             // send the given bytes over the TCP connection
             sendmsg(atoi(argv[2]));
 
-            Event* e;
-            expire(e);
+            // Event* e;
+            // expire(e);
             return (TCL_OK);
         }
     }
@@ -2257,20 +2267,33 @@ void TcpAgent::recv_newack_helper(Packet *pkt) {
     if ((flow_bytes != 0) && (highest_ack_ >= curseq_-1) && (closed_ == 1)) {
         std::cout << "esdn::flowend called at:: "
             << Scheduler::instance().clock()
-            << "for flow_bytes" << flow_bytes
+            << " for flow_bytes " << flow_bytes
             << std::endl;
 
         // call flow end function here
-        Tcl::instance().evalf("%s flow_end", this->name());
+        // Tcl::instance().evalf("%s flow_end", this->name());
+        cwnd_ = 0;
+        decrementFlows();
+
+        if (isDHTEnabled) {
+            // stop dht
+            std::cout << "stop init_DHT called" << std::endl;
+            init_DHT(0);
+        }
+
+        poll_off = 1;
 
         // print flow time to file
-
         finish_times_ofstream << here_.addr_ << "\t"
             << here_.port_ << "\t"
             << dst_.addr_ << "\t"
             << dst_.port_ << "\t";
         finish_times_ofstream << setprecision(15)
             << Scheduler::instance().clock() << std::endl;
+
+        // finish tcp connection
+        std::cout << "tcp done evalf called" << std::endl;
+        Tcl::instance().evalf("%s done", this->name());
     }
 
     /* if the connection is done, call finish() */
@@ -2766,7 +2789,7 @@ void TcpAgent::finish()
 {
     // std::cout << "TcpAgent:: finish: called at "
     //     << Scheduler::instance().clock() << "\n";
-    Tcl::instance().evalf("%s done", this->name());
+    // Tcl::instance().evalf("%s done", this->name());
 }
 
 void RtxTimer::expire(Event*)

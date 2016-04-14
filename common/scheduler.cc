@@ -90,14 +90,14 @@ Scheduler::schedule(Handler* h, Event* e, double delay)
                 abort();
         };
 
-        if (e->uid_ > 0) {
-                printf("Scheduler: Event UID not valid!\n\n");
-                printf("event uid::");
-                printf(UID_PRINTF_FORMAT, e->uid_);
-                printf("\nevent time:: %f\n", e->time_);
-                dumpq();
-                abort();
-        }
+        // if (e->uid_ > 0) {
+        //         printf("Scheduler: Event UID not valid!\n\n");
+        //         printf("event uid::");
+        //         printf(UID_PRINTF_FORMAT, e->uid_);
+        //         printf("\nevent time:: %f\n", e->time_);
+        //         // dumpq();
+        //         abort();
+        // }
 
         if (delay < 0) {
                 // You probably don't want to do this
@@ -144,33 +144,55 @@ Scheduler::run()
 void
 Scheduler::dispatch(Event* p, double t)
 {
-        if ((t < clock_) && (p->uid_ != 0)) {
-            printf("ns: scheduler going backwards in time from %f to %f.\n", clock_, t);
-            printf("Current Event:\n");
-            printf("t:%f uid: ", p->time_);
-            printf(UID_PRINTF_FORMAT, p->uid_);
-            printf(" handler: %p\n", p->handler_);
+        // if ((t < clock_) && (p->uid_ != 0)) {
+        //     printf("ns: scheduler going backwards in time from %f to %f.\n", clock_, t);
+        //     printf("Current Event:\n");
+        //     printf("t:%f uid: ", p->time_);
+        //     printf(UID_PRINTF_FORMAT, p->uid_);
+        //     printf(" handler: %p\n", p->handler_);
+        //     // dumpq();
+        //     abort();
+        // }
 
-            dumpq();
-            abort();
-        }
+        // if (p->uid_ != 0) { // will this kill the sim by not running a handler?
+        //     clock_ = t;
+        //     p->uid_ = -p->uid_;	// being dispatched
+        //     p->handler_->handle(p);	// dispatch
+        // }
+        // else
+        // {
+        //     fprintf(stderr, "Warning: discarding Event without an a valid id (id:: 0)\n");
+        // }
 
-        if (p->uid_ != 0) { // will this kill the sim by not running a handler?
-            clock_ = t;
-            p->uid_ = -p->uid_;	// being dispatched
-            p->handler_->handle(p);	// dispatch
-        } else {
-            fprintf(stderr, "Warning: discarding Event without an a valid id (id:: 0)\n");
+        if (p->uid_ == 0) {
+            // printf("uid :: 0 event in dispatch\n");
+            // if (t < clock_) {
+            //     printf("ns: scheduler going backwards in time from %f to %f.\n", clock_, t);
+            //     printf("Current Event:\n");
+            //     printf("t:%f uid: %d ", p->time_, p->uid_);
+            //     printf(" handler: %p\n", p->handler_);
+            //     dumpq();
+            //     abort();
+            //     return;
+            // }
+
+            // printf("dispatcng uid 0\n");
         }
 
         // if (t < clock_) {
-        //      fprintf(stderr, "ns: scheduler going backwards in time from %f to %f.\n", clock_, t);
-        //      abort();
+        //     printf("ns: scheduler going backwards in time from %f to %f.\n", clock_, t);
+        //     printf("Current Event:\n");
+        //     printf("t:%f uid: ", p->time_);
+        //     printf(UID_PRINTF_FORMAT, p->uid_);
+        //     printf(" handler: %p\n", p->handler_);
+        //     // fprintf(stderr, "ns: scheduler going backwards in time from %f to %f.\n", clock_, t);
+        //     // dumpq();
+        //     abort();
         // }
 
-        // clock_ = t;
-        // p->uid_ = -p->uid_;	// being dispatched
-        // p->handler_->handle(p);	// dispatch
+        clock_ = t;
+        p->uid_ = -p->uid_;	// being dispatched
+        p->handler_->handle(p);	// dispatch
 }
 
 void
@@ -290,6 +312,19 @@ Scheduler::command(int argc, const char*const* argv)
                                 tcl.result("can't schedule command in past");
                                 return (TCL_ERROR);
                         }
+
+                        // debugging code added
+                        printf("scheduling event:\n");
+                        printf("event uid:: ");
+                        printf(UID_PRINTF_FORMAT, e->uid_);
+                        printf("\n");
+                        printf("arguments:");
+                        for (int i = 0; i < argc; ++i) {
+                            printf(" ");
+                            printf(argv[i]);
+                        }
+                        printf("\n");
+
                         schedule(&at_handler, e, delay);
                         sprintf(tcl.buffer(), UID_PRINTF_FORMAT, e->uid_);
                         tcl.result(tcl.buffer());
